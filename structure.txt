@@ -1,0 +1,154 @@
+.
+├── README.md
+├── codebase.md
+├── docs
+│   ├── codebaseSummary.md
+│   ├── critical-path-tests.md
+│   ├── currentTask.md
+│   ├── implementationGuide.md
+│   ├── projectRoadmap.md
+│   ├── quickStart.md
+│   ├── supabase-schema.sql
+│   └── techStack.md
+├── jest.config.js
+├── jest.setup.js
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── __tests__
+│   │   ├── api
+│   │   │   └── stripe
+│   │   │       └── webhook.test.ts
+│   │   ├── payment
+│   │   │   └── SubscriptionManager.test.tsx
+│   │   └── questionnaire
+│   │       ├── AIRecommendations.test.tsx
+│   │       └── QuestionCard.test.tsx
+│   ├── app
+│   │   ├── (auth)
+│   │   │   ├── login
+│   │   │   │   └── page.tsx
+│   │   │   └── signup
+│   │   │       └── page.tsx
+│   │   ├── api
+│   │   │   ├── ai
+│   │   │   │   └── generate
+│   │   │   │       └── route.ts
+│   │   │   ├── monitoring
+│   │   │   │   ├── analytics
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── error
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── performance
+│   │   │   │       └── route.ts
+│   │   │   ├── questionnaire
+│   │   │   │   ├── responses
+│   │   │   │   │   └── latest
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── submit
+│   │   │   │       └── route.ts
+│   │   │   ├── recommendations
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   └── stripe
+│   │   │       ├── checkout
+│   │   │       │   └── route.ts
+│   │   │       ├── subscription
+│   │   │       │   └── route.ts
+│   │   │       └── webhook
+│   │   │           └── route.ts
+│   │   ├── dashboard
+│   │   │   └── page.tsx
+│   │   ├── debug
+│   │   │   └── page.tsx
+│   │   ├── error.tsx
+│   │   ├── favicon.ico
+│   │   ├── fonts
+│   │   │   ├── GeistMonoVF.woff
+│   │   │   └── GeistVF.woff
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── payment
+│   │   │   ├── cancel
+│   │   │   │   └── page.tsx
+│   │   │   └── success
+│   │   │       └── page.tsx
+│   │   ├── pricing
+│   │   │   └── page.tsx
+│   │   └── questionnaire
+│   │       ├── page.tsx
+│   │       └── results
+│   │           └── page.tsx
+│   ├── components
+│   │   ├── auth
+│   │   │   └── AuthProviderWrapper.tsx
+│   │   ├── dashboard
+│   │   │   └── SavedRecommendations.tsx
+│   │   ├── debug
+│   │   │   └── DebugPanel.tsx
+│   │   ├── error
+│   │   │   └── ErrorBoundary.tsx
+│   │   ├── ideas
+│   │   ├── payment
+│   │   │   └── SubscriptionManager.tsx
+│   │   ├── questionnaire
+│   │   │   ├── AIRecommendations.tsx
+│   │   │   ├── QuestionCard.tsx
+│   │   │   └── SaveRecommendationButton.tsx
+│   │   └── ui
+│   │       ├── alert.tsx
+│   │       ├── button.tsx
+│   │       └── input.tsx
+│   ├── lib
+│   │   ├── ai
+│   │   │   ├── config.ts
+│   │   │   ├── service.ts
+│   │   │   ├── templates.ts
+│   │   │   └── types.ts
+│   │   ├── auth
+│   │   │   └── AuthContext.tsx
+│   │   ├── hooks
+│   │   │   ├── useAnalytics.ts
+│   │   │   └── useSubscription.ts
+│   │   ├── monitoring
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   ├── questionnaire
+│   │   │   ├── questions.ts
+│   │   │   ├── recommendations.ts
+│   │   │   └── service.ts
+│   │   ├── recommendations
+│   │   │   └── service.ts
+│   │   ├── stripe
+│   │   │   ├── config.ts
+│   │   │   └── service.ts
+│   │   ├── supabase
+│   │   │   └── config.ts
+│   │   ├── types
+│   │   │   └── questionnaire.ts
+│   │   └── utils
+│   │       ├── api-error.ts
+│   │       ├── cache.ts
+│   │       ├── form-validation.ts
+│   │       ├── index.ts
+│   │       └── sanitize.ts
+│   ├── middleware.ts
+│   └── types
+│       ├── database.ts
+│       └── jest.d.ts
+├── structure.txt
+├── tailwind.config.ts
+└── tsconfig.json
+
+59 directories, 92 files
