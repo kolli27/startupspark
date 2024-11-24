@@ -13,16 +13,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 238 84% 67%;
+    --primary: 215 25% 27%;
     --primary-foreground: 210 40% 98%;
  
-    --secondary: 210 40% 96.1%;
+    --secondary: 217 19% 27%;
     --secondary-foreground: 222.2 47.4% 11.2%;
  
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
  
-    --accent: 210 40% 96.1%;
+    --accent: 200 13% 45%;
     --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
@@ -45,8 +45,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
  
-    --primary: 238 84% 67%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 215 25% 27%;
+    --primary-foreground: 210 40% 98%;
  
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -54,7 +54,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
  
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 200 13% 45%;
     --accent-foreground: 210 40% 98%;
  
     --destructive: 0 62.8% 30.6%;
@@ -77,13 +77,85 @@
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-accent-500;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent;
 }
 
 .gradient-border {
-  @apply border-transparent bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-border;
+  @apply border-2 border-transparent relative;
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent))) border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box, 
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) padding-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
 .gradient-bg {
-  @apply bg-gradient-to-r from-primary-500 to-accent-500;
+  @apply bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity;
+}
+
+@keyframes subtle-float {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(15px, -15px) scale(1.05);
+  }
+  66% {
+    transform: translate(-10px, 10px) scale(0.95);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateX(150px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(150px) rotate(-360deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbit 20s linear infinite;
+}
+
+.animate-orbit-reverse {
+  animation: orbit 25s linear infinite reverse;
+}
+
+.animate-float {
+  animation: subtle-float 6s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.visual-element {
+  @apply relative bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border-2 border-primary/10;
+  transition: all 0.3s ease;
+}
+
+.visual-element:hover {
+  @apply border-primary/30 shadow-2xl -translate-y-1;
+}
+
+.orbit-element {
+  @apply absolute p-4 bg-white/90 backdrop-blur-md shadow-xl rounded-xl border-2 border-primary/20;
+  transition: all 0.3s ease;
+}
+
+.orbit-element:hover {
+  @apply border-primary/40 shadow-2xl scale-110;
+  z-index: 10;
 }

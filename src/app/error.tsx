@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { logError, ErrorSeverity, trackEvent } from '@/lib/monitoring';
+import { logError, ErrorSeverityEnum, trackEvent } from '@/lib/monitoring';
 import { Alert } from '@/components/ui/alert';
 
 export default function RootError({
@@ -13,7 +13,7 @@ export default function RootError({
 }) {
   useEffect(() => {
     // Log the error with our monitoring system
-    logError(error, ErrorSeverity.ERROR, {
+    logError(error, 'ERROR', {
       component: 'RootError',
       digest: error.digest,
       timestamp: new Date().toISOString()

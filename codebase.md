@@ -1,23 +1,3 @@
-# .babelrc
-
-```
-{
-  "presets": [
-    ["@babel/preset-env", {
-      "targets": {
-        "node": "current"
-      }
-    }],
-    "@babel/preset-typescript",
-    ["@babel/preset-react", {
-      "runtime": "automatic"
-    }]
-  ],
-  "plugins": []
-}
-
-```
-
 # .eslintrc.json
 
 ```json
@@ -70,6 +50,105 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+```
+
+# docs/api-documentation.md
+
+```md
+# API Documentation
+
+## Authentication
+All API endpoints require authentication via a valid session token. Authentication is handled through Supabase.
+
+## Endpoints
+
+### AI Generation
+`POST /api/ai/generate`
+- Generates AI recommendations based on user input
+- Request Body: User input parameters
+- Response: AI-generated recommendations
+
+### Questionnaire
+`POST /api/questionnaire/submit`
+- Submits questionnaire responses
+- Request Body: Questionnaire answers
+- Response: Submission confirmation
+
+`GET /api/questionnaire/responses/latest`
+- Retrieves the user's latest questionnaire responses
+- Response: Latest questionnaire responses
+
+### Recommendations
+`GET /api/recommendations`
+- Retrieves all saved recommendations
+- Response: List of recommendations
+
+`POST /api/recommendations`
+- Saves a new recommendation
+- Request Body: Recommendation data
+- Response: Saved recommendation
+
+`PATCH /api/recommendations/[id]`
+- Updates an existing recommendation
+- Request Body: Updated recommendation data
+- Response: Updated recommendation
+
+`DELETE /api/recommendations/[id]`
+- Deletes a recommendation
+- Response: Deletion confirmation
+
+### Stripe Integration
+`POST /api/stripe/checkout`
+- Creates a checkout session
+- Request Body: Subscription plan details
+- Response: Checkout session URL
+
+`GET /api/stripe/subscription`
+- Gets current subscription status
+- Response: Subscription details
+
+`POST /api/stripe/subscription`
+- Creates a new subscription
+- Request Body: Subscription details
+- Response: New subscription information
+
+`PUT /api/stripe/subscription`
+- Updates subscription
+- Request Body: Updated subscription details
+- Response: Updated subscription information
+
+`POST /api/stripe/webhook`
+- Handles Stripe webhook events
+- Request Body: Webhook event data
+- Response: Event processing confirmation
+
+### Monitoring
+`POST /api/monitoring/analytics`
+- Logs analytics events
+- Request Body: Analytics data
+- Response: Logging confirmation
+
+`POST /api/monitoring/performance`
+- Logs performance metrics
+- Request Body: Performance data
+- Response: Logging confirmation
+
+`POST /api/monitoring/error`
+- Logs error events
+- Request Body: Error details
+- Response: Logging confirmation
+
+## Error Handling
+All endpoints follow a consistent error handling pattern:
+- 400: Bad Request - Invalid input
+- 401: Unauthorized - Authentication required
+- 403: Forbidden - Insufficient permissions
+- 404: Not Found - Resource doesn't exist
+- 500: Internal Server Error - Server-side error
+
+## Rate Limiting
+API endpoints are subject to rate limiting to ensure service stability.
 
 ```
 
@@ -472,6 +551,114 @@ startupspark/
 3. Implement rate limiting for AI service
 4. Set up caching layer for responses
 5. Begin Stripe integration planning
+
+```
+
+# docs/deployment-guide.md
+
+```md
+# Deployment Guide
+
+## Prerequisites
+- Node.js 18.x or higher
+- PostgreSQL database (via Supabase)
+- Stripe account for payments
+- Environment variables configured
+
+## Environment Setup
+Create a `.env.local` file with the following variables:
+\`\`\`env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+
+# AI Service
+AI_API_KEY=your_ai_service_key
+\`\`\`
+
+## Database Setup
+1. Use Supabase as your database provider
+2. Execute the schema files in `docs/supabase-schema-updated.sql`
+3. Set up database policies for secure row-level security
+
+## Local Development
+1. Install dependencies:
+\`\`\`bash
+npm install
+\`\`\`
+
+2. Run the development server:
+\`\`\`bash
+npm run dev
+\`\`\`
+
+3. Access the application at `http://localhost:3000`
+
+## Production Deployment
+
+### Build
+1. Build the application:
+\`\`\`bash
+npm run build
+\`\`\`
+
+2. Test the production build locally:
+\`\`\`bash
+npm run start
+\`\`\`
+
+### Deployment Options
+
+#### Vercel (Recommended)
+1. Connect your repository to Vercel
+2. Configure environment variables in Vercel dashboard
+3. Deploy with automatic CI/CD
+
+#### Manual Deployment
+1. Choose a Node.js hosting provider
+2. Set up environment variables
+3. Upload built application
+4. Configure reverse proxy if needed
+
+### Post-Deployment Steps
+1. Configure Stripe webhooks to point to `/api/stripe/webhook`
+2. Set up monitoring endpoints
+3. Verify all API endpoints are accessible
+4. Test authentication flow
+5. Monitor error logs and performance
+
+## Security Considerations
+- Enable CORS policies
+- Set up rate limiting
+- Configure proper SSL/TLS
+- Review and update Supabase security policies
+- Keep dependencies updated
+
+## Monitoring
+- Set up error tracking
+- Configure performance monitoring
+- Enable analytics tracking
+- Monitor API usage and rate limits
+
+## Troubleshooting
+- Check logs for errors
+- Verify environment variables
+- Ensure database connections
+- Test Stripe webhook functionality
+- Validate authentication flow
+
+## Maintenance
+- Regular dependency updates
+- Database backups
+- Performance optimization
+- Security patches
+- API version management
 
 ```
 
@@ -892,6 +1079,320 @@ Remember: The implementation guide provides a day-by-day breakdown of tasks and 
 
 ```
 
+# docs/stripe-setup-guide.md
+
+```md
+# Stripe Setup Guide
+
+## Products and Prices Setup
+
+1. Log in to your Stripe Dashboard
+2. Navigate to Products > Add Product
+
+### Premium Subscription Product
+
+Create a new product with the following details:
+
+\`\`\`
+Name: Premium Subscription
+Description: Get unlimited business ideas and advanced features
+Default price: $9.99/month or $99/year
+\`\`\`
+
+Configuration steps:
+1. Set the product name and description
+2. Add two recurring prices:
+   - Monthly: $9.99/month
+   - Annual: $99/year (Save ~17%)
+3. Set the lookup_key for both prices to "premium"
+4. Enable tax collection if required
+5. Save the product
+
+## Environment Variables
+
+Update your environment variables with the following Stripe configuration:
+
+\`\`\`env
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+STRIPE_MONTHLY_PRICE_ID=price_xxxxx
+STRIPE_ANNUAL_PRICE_ID=price_xxxxx
+\`\`\`
+
+## Webhook Configuration
+
+1. In the Stripe Dashboard, go to Developers > Webhooks
+2. Add a new endpoint with your application's webhook URL
+3. Add the following events to listen for:
+   - checkout.session.completed
+   - customer.subscription.created
+   - customer.subscription.updated
+   - customer.subscription.deleted
+   - invoice.payment_succeeded
+
+## Usage-Based Billing (Optional)
+
+If you want to implement usage-based billing:
+
+1. Create a usage-based price for the Premium product
+2. Configure the price with:
+   - Usage type: Metered
+   - Aggregation mode: Sum of usage during period
+   - Price per unit: Set as needed
+3. Update the webhook handler to track usage with `stripe.subscriptionItems.createUsageRecord`
+
+## Testing
+
+Use Stripe's test mode to verify the integration:
+
+1. Test card numbers:
+   - Success: 4242 4242 4242 4242
+   - Decline: 4000 0000 0000 0002
+
+2. Test webhook events:
+   - Use the Stripe CLI to forward webhooks locally
+   - Test each subscription event type
+   - Verify usage tracking and limits
+
+## Production Checklist
+
+Before going live:
+
+1. Verify all webhook endpoints are properly configured
+2. Test the complete subscription lifecycle
+3. Ensure error handling is robust
+4. Set up monitoring for failed payments
+5. Configure customer email notifications
+6. Set up Stripe tax handling if required
+7. Test the upgrade/downgrade flows
+8. Verify usage limits are properly enforced
+
+## Subscription Management
+
+The system handles the following subscription states:
+
+- Free tier (default)
+- Premium active
+- Premium canceled (remains active until period end)
+- Premium past due
+- Premium incomplete
+
+Each state triggers appropriate usage limits and feature access.
+
+## Usage Tracking
+
+The system tracks:
+
+1. Business idea generations
+2. Market insights usage
+3. Follow-up questions
+
+Limits per tier:
+- Free: 3 ideas/month, no advanced features
+- Premium: Unlimited ideas and features
+
+The usage tracking system automatically:
+- Resets counters on renewal
+- Enforces limits based on tier
+- Updates usage statistics in real-time
+
+```
+
+# docs/supabase-schema-updated.sql
+
+```sql
+-- Original tables and policies from supabase-schema.sql
+-- Create questionnaire_responses table
+create table public.questionnaire_responses (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  experience text not null,
+  interests text not null,
+  commitment text not null,
+  resources text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on questionnaire_responses
+alter table public.questionnaire_responses enable row level security;
+
+-- Create policy to allow users to insert their own responses
+create policy "Users can insert their own responses"
+  on public.questionnaire_responses
+  for insert
+  with check (auth.uid() = user_id);
+
+-- Create policy to allow users to view their own responses
+create policy "Users can view their own responses"
+  on public.questionnaire_responses
+  for select
+  using (auth.uid() = user_id);
+
+-- Create user_profiles table with subscription fields
+create table public.user_profiles (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  has_completed_questionnaire boolean default false,
+  stripe_customer_id text unique,
+  subscription_tier text check (subscription_tier in ('free', 'pro', 'enterprise')),
+  subscription_status text check (subscription_status in ('active', 'trialing', 'past_due', 'canceled', 'incomplete')),
+  subscription_period_start timestamp with time zone,
+  subscription_period_end timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id)
+);
+
+-- Enable RLS on user_profiles
+alter table public.user_profiles enable row level security;
+
+-- Create policy to allow users to insert their own profile
+create policy "Users can insert their own profile"
+  on public.user_profiles
+  for insert
+  with check (auth.uid() = user_id);
+
+-- Create policy to allow users to update their own profile
+create policy "Users can update their own profile"
+  on public.user_profiles
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Create policy to allow users to view their own profile
+create policy "Users can view their own profile"
+  on public.user_profiles
+  for select
+  using (auth.uid() = user_id);
+
+-- Create saved_recommendations table
+create table public.saved_recommendations (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  recommendation_type text not null check (recommendation_type in ('business_idea', 'follow_up', 'suggestion', 'insight')),
+  content text not null,
+  notes text,
+  is_favorite boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on saved_recommendations
+alter table public.saved_recommendations enable row level security;
+
+-- Create policy to allow users to insert their own recommendations
+create policy "Users can insert their own recommendations"
+  on public.saved_recommendations
+  for insert
+  with check (auth.uid() = user_id);
+
+-- Create policy to allow users to update their own recommendations
+create policy "Users can update their own recommendations"
+  on public.saved_recommendations
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Create policy to allow users to delete their own recommendations
+create policy "Users can delete their own recommendations"
+  on public.saved_recommendations
+  for delete
+  using (auth.uid() = user_id);
+
+-- Create policy to allow users to view their own recommendations
+create policy "Users can view their own recommendations"
+  on public.saved_recommendations
+  for select
+  using (auth.uid() = user_id);
+
+-- Create subscription_history table for tracking changes
+create table public.subscription_history (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  stripe_subscription_id text not null,
+  status text not null,
+  tier text not null,
+  period_start timestamp with time zone not null,
+  period_end timestamp with time zone not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on subscription_history
+alter table public.subscription_history enable row level security;
+
+-- Create policy to allow users to view their own subscription history
+create policy "Users can view their own subscription history"
+  on public.subscription_history
+  for select
+  using (auth.uid() = user_id);
+
+-- Create function to handle user profile creation on signup
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.user_profiles (
+    user_id,
+    subscription_tier,
+    subscription_status
+  )
+  values (
+    new.id,
+    'free',
+    'active'
+  );
+  return new;
+end;
+$$;
+
+-- Create trigger to create user profile on signup
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- Create function to update subscription status
+create or replace function public.update_subscription_status()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  -- Insert into subscription history
+  insert into public.subscription_history (
+    user_id,
+    stripe_subscription_id,
+    status,
+    tier,
+    period_start,
+    period_end
+  )
+  values (
+    new.user_id,
+    new.stripe_customer_id,
+    new.subscription_status,
+    new.subscription_tier,
+    new.subscription_period_start,
+    new.subscription_period_end
+  );
+  return new;
+end;
+$$;
+
+-- Create trigger for subscription status changes
+create trigger on_subscription_updated
+  after update of subscription_status, subscription_tier
+  on public.user_profiles
+  for each row
+  when (old.subscription_status is distinct from new.subscription_status
+    or old.subscription_tier is distinct from new.subscription_tier)
+  execute procedure public.update_subscription_status();
+
+```
+
 # docs/supabase-schema.sql
 
 ```sql
@@ -1143,6 +1644,243 @@ SMTP_PASSWORD=
 
 ```
 
+# docs/usage-tracking.sql
+
+```sql
+-- Create usage_tracking table
+create table public.usage_tracking (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  feature_name text not null,
+  usage_count integer default 0,
+  period_start timestamp with time zone not null,
+  period_end timestamp with time zone not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on usage_tracking
+alter table public.usage_tracking enable row level security;
+
+-- Create policy to allow users to view their own usage
+create policy "Users can view their own usage"
+  on public.usage_tracking
+  for select
+  using (auth.uid() = user_id);
+
+-- Create policy to allow service role to update usage
+create policy "Service role can update usage"
+  on public.usage_tracking
+  for all
+  using (auth.role() = 'service_role');
+
+-- Create function to initialize usage tracking for new subscription period
+create or replace function public.initialize_usage_tracking()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  -- Initialize usage tracking for the new subscription period
+  insert into public.usage_tracking (
+    user_id,
+    feature_name,
+    usage_count,
+    period_start,
+    period_end
+  )
+  values
+    (new.user_id, 'idea_generations', 0, new.subscription_period_start, new.subscription_period_end),
+    (new.user_id, 'market_insights', 0, new.subscription_period_start, new.subscription_period_end),
+    (new.user_id, 'follow_up_questions', 0, new.subscription_period_start, new.subscription_period_end);
+  return new;
+end;
+$$;
+
+-- Create trigger for initializing usage tracking
+create trigger on_subscription_period_change
+  after insert or update of subscription_period_end
+  on public.user_profiles
+  for each row
+  when (
+    old is null or 
+    old.subscription_period_end is distinct from new.subscription_period_end
+  )
+  execute procedure public.initialize_usage_tracking();
+
+-- Create function to increment feature usage
+create or replace function public.increment_feature_usage(
+  p_user_id uuid,
+  p_feature_name text
+)
+returns void
+language plpgsql
+security definer
+as $$
+declare
+  v_subscription_tier text;
+  v_usage_limit integer;
+  v_current_usage integer;
+begin
+  -- Get user's subscription tier
+  select subscription_tier into v_subscription_tier
+  from public.user_profiles
+  where user_id = p_user_id;
+
+  -- Set usage limit based on subscription tier
+  v_usage_limit := case
+    when v_subscription_tier = 'free' then
+      case p_feature_name
+        when 'idea_generations' then 3
+        else 0
+      end
+    when v_subscription_tier = 'premium' then -1  -- Unlimited
+    else 0
+  end;
+
+  -- Get current usage
+  select usage_count into v_current_usage
+  from public.usage_tracking
+  where user_id = p_user_id
+    and feature_name = p_feature_name
+    and now() between period_start and period_end;
+
+  -- Check if usage is within limits
+  if v_usage_limit = -1 or v_current_usage < v_usage_limit then
+    -- Increment usage
+    update public.usage_tracking
+    set usage_count = usage_count + 1,
+        updated_at = now()
+    where user_id = p_user_id
+      and feature_name = p_feature_name
+      and now() between period_start and period_end;
+  else
+    raise exception 'Usage limit exceeded for feature %', p_feature_name;
+  end if;
+end;
+$$;
+
+```
+
+# docs/user-manual.md
+
+```md
+# User Manual
+
+## Getting Started
+
+### Account Setup
+1. Visit the homepage and create an account
+2. Complete your profile settings in the dashboard
+3. Choose a subscription plan if required
+
+## Main Features
+
+### Questionnaire
+The questionnaire helps gather information about your startup needs:
+1. Navigate to the questionnaire page
+2. Answer each question thoughtfully
+3. Submit your responses
+4. Review AI-generated recommendations
+5. Save useful recommendations for later reference
+
+### Dashboard
+
+#### Profile Settings
+- Update personal information
+- Manage notification preferences
+- Change password
+- Configure account settings
+
+#### Usage Statistics
+- View API usage metrics
+- Monitor recommendation generations
+- Track questionnaire submissions
+- Analyze usage patterns
+
+#### Saved Recommendations
+- Access previously saved recommendations
+- Edit saved recommendations
+- Delete unwanted recommendations
+- Export recommendations
+
+#### Export Features
+- Export data in various formats
+- Download usage reports
+- Save recommendations as PDF
+- Back up questionnaire responses
+
+### Subscription Management
+1. View available plans on the pricing page
+2. Select desired subscription tier
+3. Complete payment process
+4. Manage subscription in dashboard
+   - Upgrade/downgrade plan
+   - Update payment method
+   - View billing history
+
+### AI Recommendations
+- Generated based on questionnaire responses
+- Customized to your specific needs
+- Save useful recommendations
+- Export recommendations for offline use
+
+## Security
+
+### Password Management
+- Use strong passwords
+- Enable two-factor authentication if available
+- Reset password when needed
+- Keep login credentials secure
+
+### Data Privacy
+- All data is encrypted
+- Personal information is protected
+- Choose data sharing preferences
+- Request data export or deletion
+
+## Troubleshooting
+
+### Common Issues
+1. Login Problems
+   - Check email/password
+   - Clear browser cache
+   - Reset password if needed
+
+2. Payment Issues
+   - Verify payment method
+   - Check subscription status
+   - Contact support for billing questions
+
+3. Feature Access
+   - Confirm subscription status
+   - Check account permissions
+   - Review usage limits
+
+### Support
+- Email support available
+- Check documentation
+- Submit bug reports
+- Request feature enhancements
+
+## Best Practices
+1. Regular Updates
+   - Keep profile information current
+   - Review saved recommendations
+   - Update preferences as needed
+
+2. Data Management
+   - Export important data regularly
+   - Review and clean saved recommendations
+   - Update questionnaire responses when needed
+
+3. Security
+   - Regular password updates
+   - Review account activity
+   - Monitor usage statistics
+
+```
+
 # jest.config.js
 
 ```js
@@ -1379,13 +2117,18 @@ export default nextConfig;
     "@stripe/stripe-js": "^5.2.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.46.1",
+    "@types/ioredis": "^4.28.10",
+    "@upstash/ratelimit": "^2.0.4",
+    "@upstash/redis": "^1.34.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "ioredis": "^5.4.1",
     "lucide-react": "^0.460.0",
     "next": "15.0.3",
     "openai": "^4.73.0",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "recharts": "^2.13.3",
     "stripe": "^17.4.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
@@ -1394,6 +2137,7 @@ export default nextConfig;
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
+    "@babel/plugin-syntax-import-attributes": "^7.26.0",
     "@babel/preset-env": "^7.23.6",
     "@babel/preset-react": "^7.23.6",
     "@babel/preset-typescript": "^7.23.6",
@@ -1575,6 +2319,347 @@ STRIPE_WEBHOOK_SECRET=
 ## License
 
 MIT License - see LICENSE file for details
+
+```
+
+# setup-database.sql
+
+```sql
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create tables
+CREATE TABLE IF NOT EXISTS public.questionnaire_responses (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  experience text NOT NULL,
+  interests text NOT NULL,
+  commitment text NOT NULL,
+  resources text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  has_completed_questionnaire boolean DEFAULT false,
+  stripe_customer_id text UNIQUE,
+  subscription_tier text CHECK (subscription_tier IN ('free', 'pro', 'enterprise')),
+  subscription_status text CHECK (subscription_status IN ('active', 'trialing', 'past_due', 'canceled', 'incomplete')),
+  subscription_period_start timestamp with time zone,
+  subscription_period_end timestamp with time zone,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.saved_recommendations (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  recommendation_type text NOT NULL CHECK (recommendation_type IN ('business_idea', 'follow_up', 'suggestion', 'insight')),
+  content text NOT NULL,
+  notes text,
+  is_favorite boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.subscription_history (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  stripe_subscription_id text NOT NULL,
+  status text NOT NULL,
+  tier text NOT NULL,
+  period_start timestamp with time zone NOT NULL,
+  period_end timestamp with time zone NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.usage_tracking (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  feature_name text NOT NULL,
+  usage_count integer DEFAULT 0,
+  period_start timestamp with time zone NOT NULL,
+  period_end timestamp with time zone NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Create monitoring tables
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  timestamp timestamp with time zone NOT NULL,
+  event text NOT NULL,
+  properties jsonb NOT NULL DEFAULT '{}'::jsonb,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  session_id text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.request_metrics (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  path text NOT NULL,
+  method text NOT NULL,
+  duration integer NOT NULL,
+  timestamp timestamp with time zone NOT NULL,
+  status_code integer,
+  user_agent text,
+  ip text,
+  country text,
+  authenticated boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Create indexes for monitoring tables
+CREATE INDEX IF NOT EXISTS idx_analytics_events_timestamp ON public.analytics_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id ON public.analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_event ON public.analytics_events(event);
+CREATE INDEX IF NOT EXISTS idx_request_metrics_timestamp ON public.request_metrics(timestamp);
+CREATE INDEX IF NOT EXISTS idx_request_metrics_path ON public.request_metrics(path);
+CREATE INDEX IF NOT EXISTS idx_request_metrics_status_code ON public.request_metrics(status_code);
+
+-- Enable RLS
+ALTER TABLE public.questionnaire_responses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.saved_recommendations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscription_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usage_tracking ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.request_metrics ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies
+CREATE POLICY "Users can insert their own responses"
+  ON public.questionnaire_responses
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own responses"
+  ON public.questionnaire_responses
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own profile"
+  ON public.user_profiles
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own profile"
+  ON public.user_profiles
+  FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own profile"
+  ON public.user_profiles
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own recommendations"
+  ON public.saved_recommendations
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own recommendations"
+  ON public.saved_recommendations
+  FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own recommendations"
+  ON public.saved_recommendations
+  FOR DELETE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own recommendations"
+  ON public.saved_recommendations
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own subscription history"
+  ON public.subscription_history
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own usage"
+  ON public.usage_tracking
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Service role can update usage"
+  ON public.usage_tracking
+  FOR ALL
+  USING (auth.role() = 'service_role');
+
+-- Monitoring RLS policies
+CREATE POLICY "Service role can insert analytics events"
+  ON public.analytics_events
+  FOR INSERT
+  WITH CHECK (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can view analytics events"
+  ON public.analytics_events
+  FOR SELECT
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can insert request metrics"
+  ON public.request_metrics
+  FOR INSERT
+  WITH CHECK (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can view request metrics"
+  ON public.request_metrics
+  FOR SELECT
+  USING (auth.role() = 'service_role');
+
+-- Create functions and triggers
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.user_profiles (
+    user_id,
+    subscription_tier,
+    subscription_status
+  )
+  VALUES (
+    NEW.id,
+    'free',
+    'active'
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.update_subscription_status()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  -- Insert into subscription history
+  INSERT INTO public.subscription_history (
+    user_id,
+    stripe_subscription_id,
+    status,
+    tier,
+    period_start,
+    period_end
+  )
+  VALUES (
+    NEW.user_id,
+    NEW.stripe_customer_id,
+    NEW.subscription_status,
+    NEW.subscription_tier,
+    NEW.subscription_period_start,
+    NEW.subscription_period_end
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.initialize_usage_tracking()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  -- Initialize usage tracking for the new subscription period
+  INSERT INTO public.usage_tracking (
+    user_id,
+    feature_name,
+    usage_count,
+    period_start,
+    period_end
+  )
+  VALUES
+    (NEW.user_id, 'idea_generations', 0, NEW.subscription_period_start, NEW.subscription_period_end),
+    (NEW.user_id, 'market_insights', 0, NEW.subscription_period_start, NEW.subscription_period_end),
+    (NEW.user_id, 'follow_up_questions', 0, NEW.subscription_period_start, NEW.subscription_period_end);
+  RETURN NEW;
+END;
+$$;
+
+-- Create triggers
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+DROP TRIGGER IF EXISTS on_subscription_updated ON public.user_profiles;
+CREATE TRIGGER on_subscription_updated
+  AFTER UPDATE OF subscription_status, subscription_tier
+  ON public.user_profiles
+  FOR EACH ROW
+  WHEN (OLD.subscription_status IS DISTINCT FROM NEW.subscription_status
+    OR OLD.subscription_tier IS DISTINCT FROM NEW.subscription_tier)
+  EXECUTE PROCEDURE public.update_subscription_status();
+
+DROP TRIGGER IF EXISTS on_subscription_period_change ON public.user_profiles;
+CREATE TRIGGER on_subscription_period_change
+  AFTER INSERT OR UPDATE OF subscription_period_end
+  ON public.user_profiles
+  FOR EACH ROW
+  WHEN (
+    OLD IS NULL OR 
+    OLD.subscription_period_end IS DISTINCT FROM NEW.subscription_period_end
+  )
+  EXECUTE PROCEDURE public.initialize_usage_tracking();
+
+-- Create function to increment feature usage
+CREATE OR REPLACE FUNCTION public.increment_feature_usage(
+  p_user_id uuid,
+  p_feature_name text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_subscription_tier text;
+  v_usage_limit integer;
+  v_current_usage integer;
+BEGIN
+  -- Get user's subscription tier
+  SELECT subscription_tier INTO v_subscription_tier
+  FROM public.user_profiles
+  WHERE user_id = p_user_id;
+
+  -- Set usage limit based on subscription tier
+  v_usage_limit := CASE
+    WHEN v_subscription_tier = 'free' THEN
+      CASE p_feature_name
+        WHEN 'idea_generations' THEN 3
+        ELSE 0
+      END
+    WHEN v_subscription_tier = 'premium' THEN -1  -- Unlimited
+    ELSE 0
+  END;
+
+  -- Get current usage
+  SELECT usage_count INTO v_current_usage
+  FROM public.usage_tracking
+  WHERE user_id = p_user_id
+    AND feature_name = p_feature_name
+    AND now() BETWEEN period_start AND period_end;
+
+  -- Check if usage is within limits
+  IF v_usage_limit = -1 OR v_current_usage < v_usage_limit THEN
+    -- Increment usage
+    UPDATE public.usage_tracking
+    SET usage_count = usage_count + 1,
+        updated_at = now()
+    WHERE user_id = p_user_id
+      AND feature_name = p_feature_name
+      AND now() BETWEEN period_start AND period_end;
+  ELSE
+    RAISE EXCEPTION 'Usage limit exceeded for feature %', p_feature_name;
+  END IF;
+END;
+$$;
 
 ```
 
@@ -2667,6 +3752,140 @@ export default function LoginPage() {
 
 ```
 
+# src/app/(auth)/password-reset/page.tsx
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/types/database';
+
+export default function PasswordReset() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const supabase = createClientComponentClient<Database>();
+
+  // Get the hash from the URL (for reset confirmation)
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  const isResetConfirmation = hash.includes('type=recovery');
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      if (isResetConfirmation) {
+        // Set new password
+        const { error } = await supabase.auth.updateUser({ password });
+        
+        if (error) throw error;
+        
+        setMessage('Password updated successfully. You can now log in with your new password.');
+        setPassword('');
+      } else {
+        // Request password reset
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/password-reset#type=recovery`,
+        });
+        
+        if (error) throw error;
+        
+        setMessage('Check your email for the password reset link.');
+        setEmail('');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            {isResetConfirmation ? 'Set New Password' : 'Reset Password'}
+          </h2>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handlePasswordReset}>
+          {message && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">{message}</div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+
+          <div className="rounded-md shadow-sm -space-y-px">
+            {isResetConfirmation ? (
+              <div>
+                <label htmlFor="password" className="sr-only">New Password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="New password"
+                  minLength={6}
+                />
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="email" className="sr-only">Email address</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Email address"
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
+              ) : null}
+              {isResetConfirmation ? 'Update Password' : 'Send Reset Link'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+```
+
 # src/app/(auth)/signup/page.tsx
 
 ```tsx
@@ -2847,6 +4066,8 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { aiService } from '@/lib/ai/service'
 
+export const runtime = 'edge'
+
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -2855,6 +4076,8 @@ export async function POST(request: Request) {
     if (sessionError || !session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { stream } = await request.json()
 
     // Get the latest questionnaire response for the user
     const { data: questionnaireData, error: questionnaireError } = await supabase
@@ -2872,46 +4095,91 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate all types of recommendations in parallel
-    const [
-      businessIdeas,
-      followUpQuestions,
-      actionableSuggestions,
-      marketInsights
-    ] = await Promise.all([
-      aiService.generateBusinessIdeas(questionnaireData),
-      aiService.generateFollowUpQuestions(questionnaireData),
-      aiService.generateActionableSuggestions(questionnaireData),
-      aiService.generateMarketInsights(questionnaireData)
-    ])
+    // Handle streaming response
+    if (stream) {
+      const encoder = new TextEncoder()
+      const customReadable = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of aiService.streamResponse(questionnaireData, 'ideas')) {
+              controller.enqueue(encoder.encode(chunk))
+            }
+            controller.close()
+          } catch (error: any) {
+            controller.error(error)
+          }
+        },
+      })
 
-    return NextResponse.json({
-      data: {
+      return new Response(customReadable, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      })
+    }
+
+    // Handle regular response
+    try {
+      // Generate all types of recommendations in parallel
+      const [
         businessIdeas,
         followUpQuestions,
         actionableSuggestions,
         marketInsights
+      ] = await Promise.all([
+        aiService.generateBusinessIdeas(questionnaireData),
+        aiService.generateFollowUpQuestions(questionnaireData),
+        aiService.generateActionableSuggestions(questionnaireData),
+        aiService.generateMarketInsights(questionnaireData)
+      ])
+
+      return NextResponse.json({
+        data: {
+          businessIdeas,
+          followUpQuestions,
+          actionableSuggestions,
+          marketInsights
+        }
+      })
+    } catch (error: any) {
+      if (error.name === 'AIServiceError') {
+        return NextResponse.json(
+          { 
+            error: error.message,
+            code: error.code,
+            retryAfter: error.retryAfter 
+          },
+          { 
+            status: error.code === 'RATE_LIMIT' ? 429 : 
+                    error.code === 'AUTH_ERROR' ? 401 :
+                    error.code === 'INVALID_REQUEST' ? 400 : 500 
+          }
+        )
       }
-    })
+
+      throw error
+    }
   } catch (error: any) {
     console.error('Error generating AI recommendations:', error)
     
-    if (error.name === 'AIServiceError') {
-      return NextResponse.json(
-        { 
-          error: error.message,
-          code: error.code,
-          retryAfter: error.retryAfter 
-        },
-        { status: error.code === 'RATE_LIMIT' ? 429 : 500 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 }
 
 ```
@@ -2920,23 +4188,111 @@ export async function POST(request: Request) {
 
 ```ts
 import { NextResponse } from 'next/server';
-import type { AnalyticsEvent } from '@/lib/monitoring/types';
+import { AnalyticsEvent, RequestMetrics } from '@/lib/monitoring/types';
+import { createClient } from '@/lib/supabase/config';
+import { Database } from '@/types/database';
+
+type Tables = Database['public']['Tables'];
+type MonitoringPayload = AnalyticsEvent | RequestMetrics;
+
+function formatAnalyticsEvent(event: AnalyticsEvent): Tables['analytics_events']['Insert'] {
+  return {
+    timestamp: event.timestamp,
+    event: event.event,
+    properties: event.properties as any,
+    user_id: event.userId || null,
+    session_id: event.sessionId || null,
+    created_at: new Date().toISOString()
+  };
+}
+
+function formatRequestMetrics(metrics: RequestMetrics): Tables['request_metrics']['Insert'] {
+  return {
+    path: metrics.path,
+    method: metrics.method,
+    duration: metrics.duration,
+    timestamp: metrics.timestamp,
+    status_code: metrics.statusCode || null,
+    user_agent: metrics.userAgent || null,
+    ip: metrics.ip || null,
+    country: metrics.country || null,
+    authenticated: metrics.authenticated || false,
+    created_at: new Date().toISOString()
+  };
+}
 
 export async function POST(request: Request) {
   try {
-    const event: AnalyticsEvent = await request.json();
+    const payload: MonitoringPayload = await request.json();
+    const supabase = createClient();
     
-    // In a production environment, you would:
-    // 1. Store analytics events in a database
-    // 2. Send to analytics service (e.g., Google Analytics, Mixpanel)
-    // 3. Process events for reporting
-    
-    console.log('[Server Analytics Event]', event);
-    
+    if ('duration' in payload) {
+      const formattedMetrics = formatRequestMetrics(payload);
+      const { error } = await supabase
+        .from('request_metrics')
+        .insert(formattedMetrics);
+      if (error) throw error;
+    } else {
+      const formattedEvent = formatAnalyticsEvent(payload);
+      const { error } = await supabase
+        .from('analytics_events')
+        .insert(formattedEvent);
+      if (error) throw error;
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to track analytics event:', error);
-    return NextResponse.json({ success: false }, { status: 500 });
+    console.error('Failed to track monitoring event:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to track monitoring event' }, 
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'analytics';
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    
+    const supabase = createClient();
+    const table = type === 'requests' ? 'request_metrics' : 'analytics_events';
+    
+    let query = supabase
+      .from(table)
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(limit);
+    
+    if (from) {
+      query = query.gte('timestamp', from);
+    }
+    if (to) {
+      query = query.lte('timestamp', to);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return NextResponse.json({ 
+      success: true, 
+      data,
+      metadata: {
+        count: data?.length || 0,
+        from: from || 'beginning',
+        to: to || 'now'
+      }
+    });
+  } catch (error) {
+    console.error('Failed to fetch monitoring data:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch monitoring data' },
+      { status: 500 }
+    );
   }
 }
 
@@ -2946,23 +4302,114 @@ export async function POST(request: Request) {
 
 ```ts
 import { NextResponse } from 'next/server';
-import type { ErrorLog } from '@/lib/monitoring/types';
+import { ErrorLog } from '@/lib/monitoring/types';
+import { createClient } from '@/lib/supabase/config';
+import { Database } from '@/types/database';
+
+type ErrorLogInsert = Database['public']['Tables']['error_logs']['Insert'];
+type Json = Database['public']['Tables']['error_logs']['Insert']['context'];
 
 export async function POST(request: Request) {
   try {
     const errorLog: ErrorLog = await request.json();
+    const supabase = createClient();
     
-    // In a production environment, you would:
-    // 1. Store error logs in a database
-    // 2. Send to error tracking service (e.g., Sentry)
-    // 3. Trigger alerts for critical errors
-    
-    console.error('[Server Error Log]', errorLog);
-    
+    // Convert context to proper JSON type
+    const context: Json = {
+      url: errorLog.context.url,
+      userAgent: errorLog.context.userAgent,
+      ...Object.fromEntries(
+        Object.entries(errorLog.context)
+          .filter(([key]) => key !== 'url' && key !== 'userAgent')
+      )
+    };
+
+    const errorLogData: ErrorLogInsert = {
+      severity: errorLog.severity,
+      error_name: errorLog.error.name,
+      error_message: errorLog.error.message,
+      error_stack: errorLog.error.stack || null,
+      context,
+      timestamp: errorLog.timestamp,
+      created_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+      .from('error_logs')
+      .insert(errorLogData);
+
+    if (error) throw error;
+
+    if (errorLog.severity === 'critical') {
+      // Send alert to monitoring service
+      await fetch('/api/monitoring/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'error_alert',
+          severity: 'critical',
+          message: errorLog.error.message,
+          context: errorLog.context
+        })
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to log error:', error);
-    return NextResponse.json({ success: false }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Failed to log error' }, 
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const severity = searchParams.get('severity') as Database['public']['Tables']['error_logs']['Row']['severity'] | null;
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    
+    const supabase = createClient();
+    
+    let query = supabase
+      .from('error_logs')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(limit);
+    
+    if (severity) {
+      query = query.eq('severity', severity);
+    }
+    if (from) {
+      query = query.gte('timestamp', from);
+    }
+    if (to) {
+      query = query.lte('timestamp', to);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return NextResponse.json({ 
+      success: true, 
+      data,
+      metadata: {
+        count: data?.length || 0,
+        severity: severity || 'all',
+        from: from || 'beginning',
+        to: to || 'now'
+      }
+    });
+  } catch (error) {
+    console.error('Failed to fetch error logs:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch error logs' },
+      { status: 500 }
+    );
   }
 }
 
@@ -2972,31 +4419,32 @@ export async function POST(request: Request) {
 
 ```ts
 import { NextResponse } from 'next/server';
-import type { WebVitals } from '@/lib/monitoring/types';
+import { WebVitals } from '@/lib/monitoring/types';
+import { createClient } from '@/lib/supabase/config';
 
 export async function POST(request: Request) {
   try {
-    const metric: WebVitals = await request.json();
+    const metrics: WebVitals[] = await request.json();
+    const supabase = createClient();
     
-    // In a production environment, you would:
-    // 1. Store performance metrics in a database
-    // 2. Send to monitoring service (e.g., New Relic, Datadog)
-    // 3. Set up alerts for performance degradation
-    
-    console.log('[Server Performance Metric]', {
-      name: metric.name,
-      value: metric.value,
-      rating: metric.rating,
-      timestamp: new Date().toISOString()
-    });
-    
+    const aggregatedMetrics = metrics.map(metric => ({
+      ...metric,
+      timestamp: new Date().toISOString(),
+      aggregated_value: metric.value * metric.delta
+    }));
+
+    const { error } = await supabase
+      .from('performance_metrics')
+      .insert(aggregatedMetrics);
+
+    if (error) throw error;
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to log performance metric:', error);
+    console.error('Failed to log metrics:', error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }
-
 ```
 
 # src/app/api/questionnaire/responses/latest/route.ts
@@ -3310,6 +4758,111 @@ export async function POST(request: Request) {
 
 ```
 
+# src/app/api/shared-ideas/[id]/route.ts
+
+```ts
+import { NextRequest, NextResponse } from 'next/server';
+import { BusinessIdea } from '@/lib/ai/types';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // In a real implementation, you would:
+    // 1. Validate the share token/id
+    // 2. Check if the share link has expired
+    // 3. Fetch the idea from your database
+    // 4. Check if the user has permission to view it
+    
+    // This is a placeholder implementation
+    const mockIdea: BusinessIdea = {
+      name: 'Shared Business Idea',
+      description: 'This is a shared business idea that demonstrates the sharing functionality.',
+      targetMarket: 'Small to medium-sized businesses',
+      skills: 'Marketing, Business Development, Project Management',
+      investment: '$10,000 - $50,000',
+      challenges: 'Market competition, Initial customer acquisition',
+      steps: '1. Market research\n2. Business plan development\n3. MVP creation',
+      metrics: 'Customer acquisition cost, Monthly recurring revenue, User engagement',
+      validation: 'Validated through customer interviews and market analysis',
+      marketSize: '$500M annually',
+      competitiveAdvantage: 'Unique value proposition and innovative approach',
+      timeToMarket: '6-8 months',
+      scalabilityPotential: 'High potential for international expansion',
+      techRequirements: 'Web platform, Mobile app, Cloud infrastructure',
+      regulatoryConsiderations: 'Standard business regulations apply'
+    };
+
+    // Add artificial delay to simulate database query
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    return NextResponse.json(mockIdea);
+  } catch (error) {
+    console.error('Error fetching shared idea:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch shared idea' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json();
+    const { action } = body;
+
+    switch (action) {
+      case 'save':
+        // Save the idea to the user's collection
+        return NextResponse.json({ success: true, message: 'Idea saved successfully' });
+
+      case 'clone':
+        // Create a copy of the idea for the user
+        return NextResponse.json({ success: true, message: 'Idea cloned successfully' });
+
+      default:
+        return NextResponse.json(
+          { error: 'Invalid action' },
+          { status: 400 }
+        );
+    }
+  } catch (error) {
+    console.error('Error processing shared idea action:', error);
+    return NextResponse.json(
+      { error: 'Failed to process action' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function HEAD(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Check if the shared idea exists and is accessible
+    // This is useful for validating share links without fetching the full idea
+    
+    // Placeholder implementation
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'x-idea-exists': 'true',
+        'x-idea-accessible': 'true'
+      }
+    });
+  } catch (error) {
+    console.error('Error checking shared idea:', error);
+    return new Response(null, { status: 404 });
+  }
+}
+
+```
+
 # src/app/api/stripe/checkout/route.ts
 
 ```ts
@@ -3493,35 +5046,73 @@ export async function PUT(req: Request) {
 
 ```ts
 import { NextResponse } from 'next/server'
-import { stripe, STRIPE_CONFIG } from '@/lib/stripe/config'
+import { 
+  stripe, 
+  STRIPE_WEBHOOK_SECRET, 
+  SubscriptionTier,
+  SUBSCRIPTION_TIERS,
+  USAGE_LIMITS,
+  GRACE_PERIODS
+} from '@/lib/stripe/config'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
+import { usageService } from '@/lib/usage/service'
+
+interface SubscriptionData {
+  status: string
+  current_period_end: number
+  cancel_at_period_end: boolean
+  stripe_subscription_id?: string
+  stripe_customer_id?: string
+  subscription_tier: SubscriptionTier
+  usage_limits?: typeof USAGE_LIMITS[SubscriptionTier]
+}
+
+// Custom event types
+interface CustomUsageAlert {
+  subscription: string
+  type: string
+  total_usage: number
+}
+
+function isCustomUsageAlert(obj: unknown): obj is CustomUsageAlert {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'subscription' in obj &&
+    typeof (obj as any).subscription === 'string' &&
+    'type' in obj &&
+    typeof (obj as any).type === 'string' &&
+    'total_usage' in obj &&
+    typeof (obj as any).total_usage === 'number'
+  )
+}
 
 async function updateUserSubscription(
   supabase: any,
   userId: string,
-  subscriptionData: {
-    status: string;
-    current_period_end: number;
-    cancel_at_period_end: boolean;
-    stripe_subscription_id?: string;
-    stripe_customer_id?: string;
-  }
+  subscriptionData: SubscriptionData
 ) {
   const { error } = await supabase
-    .from('user_subscriptions')
+    .from('user_profiles')
     .upsert({
       user_id: userId,
       stripe_subscription_id: subscriptionData.stripe_subscription_id,
       stripe_customer_id: subscriptionData.stripe_customer_id,
-      stripe_subscription_status: subscriptionData.status,
-      current_period_end: new Date(subscriptionData.current_period_end * 1000).toISOString(),
+      subscription_status: subscriptionData.status,
+      subscription_tier: subscriptionData.subscription_tier,
+      subscription_period_start: new Date().toISOString(),
+      subscription_period_end: new Date(subscriptionData.current_period_end * 1000).toISOString(),
       cancel_at_period_end: subscriptionData.cancel_at_period_end,
+      usage_limits: subscriptionData.usage_limits,
       updated_at: new Date().toISOString()
     })
 
   if (error) throw error
+
+  // Reset usage tracking for new subscription period
+  await usageService.resetUsage(userId)
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
@@ -3533,13 +5124,23 @@ async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
     return
   }
 
+  const tier = subscription.metadata.tier as SubscriptionTier || SUBSCRIPTION_TIERS.basic
+  const usageLimits = USAGE_LIMITS[tier]
+
   await updateUserSubscription(supabase, userId, {
     status: subscription.status,
     current_period_end: subscription.current_period_end,
     cancel_at_period_end: subscription.cancel_at_period_end,
     stripe_subscription_id: subscription.id,
-    stripe_customer_id: subscription.customer as string
+    stripe_customer_id: subscription.customer as string,
+    subscription_tier: tier,
+    usage_limits: usageLimits
   })
+
+  // Send welcome email for new subscriptions
+  if (event.type === 'customer.subscription.created') {
+    await sendSubscriptionEmail(userId, 'welcome', tier)
+  }
 }
 
 async function handlePaymentSuccess(event: Stripe.Event, supabase: any) {
@@ -3551,61 +5152,119 @@ async function handlePaymentSuccess(event: Stripe.Event, supabase: any) {
     return
   }
 
-  // For one-time payments
-  if (session.mode === 'payment') {
-    const { error } = await supabase
-      .from('user_purchases')
-      .insert({
-        user_id: userId,
-        amount: session.amount_total,
-        currency: session.currency,
-        status: 'completed',
-        payment_intent: session.payment_intent,
-        created_at: new Date().toISOString()
-      })
-
-    if (error) throw error
-  }
-
   // For subscription payments, ensure customer data is saved
   if (session.mode === 'subscription' && session.subscription) {
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+    const tier = subscription.metadata.tier as SubscriptionTier || SUBSCRIPTION_TIERS.basic
+    const usageLimits = USAGE_LIMITS[tier]
     
     await updateUserSubscription(supabase, userId, {
       status: subscription.status,
       current_period_end: subscription.current_period_end,
       cancel_at_period_end: subscription.cancel_at_period_end,
       stripe_subscription_id: subscription.id,
-      stripe_customer_id: subscription.customer as string
+      stripe_customer_id: subscription.customer as string,
+      subscription_tier: tier,
+      usage_limits: usageLimits
     })
   }
 }
 
-async function handleInvoicePaid(event: Stripe.Event, supabase: any) {
+async function handlePaymentFailed(event: Stripe.Event, supabase: any) {
   const invoice = event.data.object as Stripe.Invoice
-  if (invoice.subscription) {
-    const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
-    const userId = subscription.metadata.userId
-    
-    if (userId) {
-      await updateUserSubscription(supabase, userId, {
-        status: subscription.status,
-        current_period_end: subscription.current_period_end,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        stripe_subscription_id: subscription.id,
-        stripe_customer_id: subscription.customer as string
+  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+  const userId = subscription.metadata.userId
+
+  if (userId) {
+    // Add grace period for payment failure
+    const gracePeriodEnd = new Date()
+    gracePeriodEnd.setDate(gracePeriodEnd.getDate() + GRACE_PERIODS.PAYMENT_FAILURE)
+
+    await supabase
+      .from('user_profiles')
+      .update({
+        payment_failure_grace_period_end: gracePeriodEnd.toISOString()
       })
-    }
+      .eq('user_id', userId)
+
+    // Send payment failure notification
+    await sendSubscriptionEmail(userId, 'payment_failed', subscription.metadata.tier as SubscriptionTier)
   }
+}
+
+async function handleCustomUsageAlert(eventData: unknown, supabase: any) {
+  if (!isCustomUsageAlert(eventData)) {
+    console.error('Invalid usage alert data:', eventData)
+    return
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(eventData.subscription)
+  const userId = subscription.metadata.userId
+  const usageType = eventData.type
+  const currentUsage = eventData.total_usage
+
+  if (userId) {
+    // Add grace period for usage overage
+    const gracePeriodEnd = new Date()
+    gracePeriodEnd.setDate(gracePeriodEnd.getDate() + GRACE_PERIODS.USAGE_OVERAGE)
+
+    await supabase
+      .from('user_profiles')
+      .update({
+        usage_overage_grace_period_end: gracePeriodEnd.toISOString()
+      })
+      .eq('user_id', userId)
+
+    // Send usage limit notification
+    await sendSubscriptionEmail(userId, 'usage_limit', subscription.metadata.tier as SubscriptionTier, {
+      usageType,
+      currentUsage
+    })
+  }
+}
+
+async function handleSubscriptionDeleted(event: Stripe.Event, supabase: any) {
+  const subscription = event.data.object as Stripe.Subscription
+  const userId = subscription.metadata.userId
+
+  if (!userId) {
+    console.error('No userId found in subscription metadata')
+    return
+  }
+
+  // Reset to basic tier
+  await updateUserSubscription(supabase, userId, {
+    status: 'canceled',
+    current_period_end: subscription.current_period_end,
+    cancel_at_period_end: true,
+    stripe_subscription_id: subscription.id,
+    stripe_customer_id: subscription.customer as string,
+    subscription_tier: SUBSCRIPTION_TIERS.basic,
+    usage_limits: USAGE_LIMITS[SUBSCRIPTION_TIERS.basic]
+  })
+
+  // Send cancellation email
+  await sendSubscriptionEmail(userId, 'cancelled', SUBSCRIPTION_TIERS.basic)
+}
+
+async function sendSubscriptionEmail(
+  userId: string,
+  type: 'welcome' | 'payment_failed' | 'usage_limit' | 'cancelled',
+  tier: SubscriptionTier,
+  data?: Record<string, any>
+) {
+  // Implementation for sending emails would go here
+  // This could integrate with your email service provider
+  console.log(`Sending ${type} email to ${userId} for tier ${tier}`, data)
 }
 
 export async function POST(req: Request) {
   const body = await req.text()
   const signature = req.headers.get('stripe-signature')
 
-  if (!signature) {
+  if (!signature || !STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json(
-      { error: 'Missing stripe-signature header' },
+      { error: 'Missing required webhook configuration' },
       { status: 400 }
     )
   }
@@ -3614,28 +5273,41 @@ export async function POST(req: Request) {
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      STRIPE_CONFIG.webhookSecret!
-    )
+      STRIPE_WEBHOOK_SECRET
+    ) as Stripe.Event & { type: string }
 
     const supabase = createRouteHandlerClient({ cookies })
 
-    switch (event.type) {
+    // Handle standard Stripe events
+    switch (event.type as Stripe.WebhookEndpointCreateParams.EnabledEvent) {
       case 'checkout.session.completed':
         await handlePaymentSuccess(event, supabase)
         break
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-      case 'customer.subscription.deleted':
         await handleSubscriptionChange(event, supabase)
         break
 
+      case 'customer.subscription.deleted':
+        await handleSubscriptionDeleted(event, supabase)
+        break
+
       case 'invoice.payment_succeeded':
-        await handleInvoicePaid(event, supabase)
+        await handlePaymentSuccess(event, supabase)
+        break
+
+      case 'invoice.payment_failed':
+        await handlePaymentFailed(event, supabase)
         break
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        // Handle non-standard events
+        if ((event as any).type === 'customer.usage.alert') {
+          await handleCustomUsageAlert(event.data.object, supabase)
+        } else {
+          console.log(`Unhandled event type: ${event.type}`)
+        }
     }
 
     return NextResponse.json({ received: true })
@@ -3661,117 +5333,206 @@ export const config = {
 # src/app/dashboard/page.tsx
 
 ```tsx
-"use client"
+import { Metadata } from 'next'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import UsageAnalytics from '@/components/dashboard/usage-analytics'
+import SubscriptionManager from '@/components/dashboard/subscription-manager'
+import { IdeaGrid } from '@/components/dashboard/idea-grid'
+import { AnalyticsPanel } from '@/components/dashboard/analytics-panel'
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth/AuthContext"
-import { SavedRecommendations } from "@/components/dashboard/SavedRecommendations"
+export const metadata: Metadata = {
+  title: 'Dashboard - StartupSpark',
+  description: 'Manage your startup ideas and track your progress'
+}
 
-export default function DashboardPage() {
-  const router = useRouter()
-  const { user, loading, signOut } = useAuth()
+export default async function DashboardPage() {
+  const supabase = createServerComponentClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login")
-    }
-  }, [user, loading, router])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+  if (!session) {
+    redirect('/login')
   }
 
-  if (!user) {
-    return null
-  }
+  // Fetch user profile with subscription details
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .single()
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <main className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="font-bold text-xl">
-              <span className="bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 bg-clip-text text-transparent">
-                StartupSpark
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">{user.email}</span>
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  await signOut()
-                  router.push("/login")
-                }}
-              >
-                Sign out
-              </Button>
-            </div>
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome back, {session.user.email}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Here's an overview of your account and startup progress
+            </p>
           </div>
-        </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white shadow-sm rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Button
-                  variant="gradient"
-                  className="w-full justify-start"
-                  onClick={() => router.push("/questionnaire")}
-                >
-                  Take Questionnaire
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => window.location.href = '#saved-recommendations'}
-                >
-                  View Saved Ideas
-                </Button>
-              </div>
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {/* Left Column */}
+            <div className="space-y-8">
+              {/* Subscription Status */}
+              <SubscriptionManager userId={session.user.id} />
 
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Your Progress</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Questionnaire</span>
-                    <span className="text-green-600">✓ Complete</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Profile</span>
-                    <span className="text-green-600">✓ Complete</span>
-                  </div>
+              {/* Usage Analytics */}
+              <UsageAnalytics userId={session.user.id} />
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-8">
+              {/* Analytics Overview */}
+              <AnalyticsPanel userId={session.user.id} />
+
+              {/* Recent Ideas */}
+              <div className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-900">Recent Ideas</h2>
+                </div>
+                <div className="p-6">
+                  <IdeaGrid userId={session.user.id} limit={5} />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white shadow-sm rounded-lg p-6 mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome back!</h1>
-              <p className="text-gray-600 mb-6">
-                Here are your saved recommendations and business ideas. Take the questionnaire again to get new personalized suggestions.
-              </p>
+          {/* Subscription CTA */}
+          {(!profile?.subscription_tier || profile.subscription_tier === 'basic') && (
+            <div className="mt-8 bg-indigo-50 rounded-lg shadow-sm">
+              <div className="px-6 py-5 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-indigo-900">
+                    Upgrade to Pro
+                  </h3>
+                  <p className="mt-2 text-sm text-indigo-700">
+                    Get access to advanced features and increased usage limits.
+                  </p>
+                </div>
+                <div className="mt-3 sm:mt-0 sm:ml-6">
+                  <a
+                    href="/pricing"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    View Plans
+                  </a>
+                </div>
+              </div>
             </div>
+          )}
 
-            <div id="saved-recommendations" className="bg-white shadow-sm rounded-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Your Saved Recommendations</h2>
-              <SavedRecommendations userId={user.id} />
-            </div>
+          {/* Quick Actions */}
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <a
+              href="/questionnaire"
+              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+            >
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-6 w-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-gray-900">New Idea</p>
+                <p className="text-sm text-gray-500">Generate a new startup idea</p>
+              </div>
+            </a>
+
+            <a
+              href="/dashboard/saved"
+              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+            >
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-6 w-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-gray-900">Saved Ideas</p>
+                <p className="text-sm text-gray-500">View your saved ideas</p>
+              </div>
+            </a>
+
+            <a
+              href="/pricing"
+              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+            >
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-6 w-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-gray-900">Subscription</p>
+                <p className="text-sm text-gray-500">Manage your plan</p>
+              </div>
+            </a>
+
+            <a
+              href="/contact"
+              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+            >
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-6 w-6 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-gray-900">Support</p>
+                <p className="text-sm text-gray-500">Get help and support</p>
+              </div>
+            </a>
           </div>
         </div>
       </main>
@@ -3905,7 +5666,7 @@ export default function DebugPage() {
 'use client';
 
 import { useEffect } from 'react';
-import { logError, ErrorSeverity, trackEvent } from '@/lib/monitoring';
+import { logError, ErrorSeverityEnum, trackEvent } from '@/lib/monitoring';
 import { Alert } from '@/components/ui/alert';
 
 export default function RootError({
@@ -3917,7 +5678,7 @@ export default function RootError({
 }) {
   useEffect(() => {
     // Log the error with our monitoring system
-    logError(error, ErrorSeverity.ERROR, {
+    logError(error, 'ERROR', {
       component: 'RootError',
       digest: error.digest,
       timestamp: new Date().toISOString()
@@ -3998,16 +5759,16 @@ This is a binary file of the type: Binary
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 238 84% 67%;
+    --primary: 215 25% 27%;
     --primary-foreground: 210 40% 98%;
  
-    --secondary: 210 40% 96.1%;
+    --secondary: 217 19% 27%;
     --secondary-foreground: 222.2 47.4% 11.2%;
  
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
  
-    --accent: 210 40% 96.1%;
+    --accent: 200 13% 45%;
     --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
@@ -4030,8 +5791,8 @@ This is a binary file of the type: Binary
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
  
-    --primary: 238 84% 67%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 215 25% 27%;
+    --primary-foreground: 210 40% 98%;
  
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -4039,7 +5800,7 @@ This is a binary file of the type: Binary
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
  
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 200 13% 45%;
     --accent-foreground: 210 40% 98%;
  
     --destructive: 0 62.8% 30.6%;
@@ -4062,15 +5823,87 @@ This is a binary file of the type: Binary
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-accent-500;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent;
 }
 
 .gradient-border {
-  @apply border-transparent bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-border;
+  @apply border-2 border-transparent relative;
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent))) border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box, 
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) padding-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
 .gradient-bg {
-  @apply bg-gradient-to-r from-primary-500 to-accent-500;
+  @apply bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity;
+}
+
+@keyframes subtle-float {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(15px, -15px) scale(1.05);
+  }
+  66% {
+    transform: translate(-10px, 10px) scale(0.95);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateX(150px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(150px) rotate(-360deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbit 20s linear infinite;
+}
+
+.animate-orbit-reverse {
+  animation: orbit 25s linear infinite reverse;
+}
+
+.animate-float {
+  animation: subtle-float 6s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.visual-element {
+  @apply relative bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border-2 border-primary/10;
+  transition: all 0.3s ease;
+}
+
+.visual-element:hover {
+  @apply border-primary/30 shadow-2xl -translate-y-1;
+}
+
+.orbit-element {
+  @apply absolute p-4 bg-white/90 backdrop-blur-md shadow-xl rounded-xl border-2 border-primary/20;
+  transition: all 0.3s ease;
+}
+
+.orbit-element:hover {
+  @apply border-primary/40 shadow-2xl scale-110;
+  z-index: 10;
 }
 
 ```
@@ -4080,8 +5913,9 @@ This is a binary file of the type: Binary
 ```tsx
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { measureWebVitals, reportPerformanceMetric } from '@/lib/monitoring';
+import { measureWebVitals } from '@/lib/monitoring';
 import DebugPanel from '@/components/debug/DebugPanel';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -4095,18 +5929,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Initialize performance monitoring
-  if (typeof window !== 'undefined') {
-    measureWebVitals((metric) => {
-      reportPerformanceMetric(metric);
-    });
-  }
-
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <DebugPanel />
+        <AuthProvider>
+          {children}
+          <DebugPanel />
+        </AuthProvider>
       </body>
     </html>
   );
@@ -4119,23 +5948,24 @@ export default function RootLayout({
 ```tsx
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Sparkles, Rocket, Target, ArrowRight, Lightbulb, ChartBar, Users, Brain, TrendingUp } from "lucide-react"
+import PricingSection from "@/components/pricing-section"
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
         <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="font-bold text-2xl">
-            <span className="bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 bg-clip-text text-transparent">
-              StartupSpark
-            </span>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <span className="font-bold text-2xl">StartupSpark</span>
           </div>
           <div className="flex gap-4">
             <Button variant="ghost" asChild>
               <Link href="/login">Login</Link>
             </Button>
-            <Button variant="gradient" asChild>
+            <Button className="gradient-bg shadow-lg" asChild>
               <Link href="/signup">Get Started</Link>
             </Button>
           </div>
@@ -4143,68 +5973,134 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-4 py-24 md:py-32 bg-gradient-to-b from-gray-50 to-white">
-        <div className="text-center max-w-5xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
-            Transform Your Ideas into{" "}
-            <span className="bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 bg-clip-text text-transparent">
-              Thriving Businesses
-            </span>
-          </h1>
-          <p className="text-gray-700 text-xl md:text-2xl max-w-2xl mx-auto mb-12">
-            Use AI-powered insights to discover personalized business ideas that match your skills, passions, and goals.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="gradient" className="text-lg px-8 py-6" asChild>
-              <Link href="/signup">Start Free Trial</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6" asChild>
-              <Link href="/questionnaire">Try Demo</Link>
-            </Button>
-          </div>
+      <section className="relative flex-1 flex items-center justify-center px-4 py-24 md:py-32 overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/10 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-72 h-72 bg-accent/10 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-secondary/10 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
         </div>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mt-24">
-          <div className="p-8 rounded-xl border bg-white/50 backdrop-blur-sm hover:shadow-lg transition-all">
-            <div className="w-14 h-14 rounded-xl bg-primary-100 flex items-center justify-center mb-6">
-              <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Text Content */}
+            <div className="text-left">
+              <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
+                Discover Your Perfect{" "}
+                <span className="gradient-text">Business Idea</span>
+              </h1>
+              <p className="text-muted-foreground text-xl md:text-2xl max-w-xl mb-12">
+                Let AI help you uncover exciting business opportunities perfectly matched to your skills, interests, and market potential.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg" 
+                  className="gradient-bg text-lg px-8 py-6 shadow-lg group"
+                  asChild
+                >
+                  <Link href="/signup">
+                    Find Your Idea
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-8 py-6 hover:bg-accent/5 border-2"
+                  asChild
+                >
+                  <Link href="/questionnaire">Try Idea Generator</Link>
+                </Button>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Personalized Ideas</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Get business ideas tailored to your unique skills and interests.
-            </p>
-          </div>
-          <div className="p-8 rounded-xl border bg-white/50 backdrop-blur-sm hover:shadow-lg transition-all">
-            <div className="w-14 h-14 rounded-xl bg-primary-100 flex items-center justify-center mb-6">
-              <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+
+            {/* Right Column - Visual Element */}
+            <div className="relative h-[600px] hidden md:block">
+              {/* Central Hub */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 visual-element w-48 h-48 rounded-full flex items-center justify-center">
+                <div className="text-center">
+                  <Brain className="w-12 h-12 text-primary mx-auto mb-2" />
+                  <p className="font-semibold text-sm">AI-Powered</p>
+                  <p className="text-xs text-muted-foreground">Idea Generation</p>
+                </div>
+              </div>
+
+              {/* Orbiting Elements */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-primary/10">
+                {/* Market Analysis */}
+                <div className="orbit-element animate-orbit">
+                  <ChartBar className="w-8 h-8 text-primary mb-1" />
+                  <p className="text-sm font-medium">Market Analysis</p>
+                  <p className="text-xs text-muted-foreground">Validate Potential</p>
+                </div>
+
+                {/* Target Audience */}
+                <div className="orbit-element animate-orbit animation-delay-2000" style={{ animationDelay: "-6s" }}>
+                  <Users className="w-8 h-8 text-accent mb-1" />
+                  <p className="text-sm font-medium">Target Audience</p>
+                  <p className="text-xs text-muted-foreground">Define Your Market</p>
+                </div>
+
+                {/* Growth Strategy */}
+                <div className="orbit-element animate-orbit animation-delay-4000" style={{ animationDelay: "-12s" }}>
+                  <TrendingUp className="w-8 h-8 text-secondary mb-1" />
+                  <p className="text-sm font-medium">Growth Strategy</p>
+                  <p className="text-xs text-muted-foreground">Scale Your Business</p>
+                </div>
+              </div>
+
+              {/* Decorative Elements */}
+              <div className="absolute top-20 left-20 w-4 h-4 rounded-full bg-primary/20 animate-pulse"></div>
+              <div className="absolute bottom-32 right-24 w-6 h-6 rounded-full bg-accent/20 animate-pulse animation-delay-2000"></div>
+              <div className="absolute top-1/3 right-16 w-3 h-3 rounded-full bg-secondary/20 animate-pulse animation-delay-4000"></div>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Market Validation</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Validate your ideas with real market data and insights.
-            </p>
-          </div>
-          <div className="p-8 rounded-xl border bg-white/50 backdrop-blur-sm hover:shadow-lg transition-all">
-            <div className="w-14 h-14 rounded-xl bg-primary-100 flex items-center justify-center mb-6">
-              <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Quick Start</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Get actionable steps to start your business journey today.
-            </p>
           </div>
         </div>
       </section>
 
+      {/* Features */}
+      <section className="py-24 bg-accent/5">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                icon: Sparkles,
+                title: "AI-Powered Discovery",
+                description: "Our AI analyzes your profile to discover untapped business opportunities perfect for you."
+              },
+              {
+                icon: Target,
+                title: "Market Potential",
+                description: "Each idea comes with market analysis to ensure real business potential."
+              },
+              {
+                icon: Rocket,
+                title: "Actionable Path",
+                description: "Get a clear roadmap to turn your chosen idea into a real business."
+              }
+            ].map((feature, i) => (
+              <div 
+                key={i}
+                className="group p-8 rounded-xl border-2 bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all hover:-translate-y-1"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <feature.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                <div className="h-0.5 w-0 group-hover:w-full mt-4 gradient-bg transition-all duration-300" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <PricingSection />
+
       {/* Footer */}
-      <footer className="border-t py-8 bg-white">
-        <div className="container mx-auto px-4 text-center text-gray-600">
+      <footer className="py-8 border-t">
+        <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© 2024 StartupSpark. All rights reserved.</p>
         </div>
       </footer>
@@ -4217,64 +6113,200 @@ export default function Home() {
 # src/app/payment/cancel/page.tsx
 
 ```tsx
-"use client"
+import { Metadata } from 'next'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+export const metadata: Metadata = {
+  title: 'Payment Cancelled - StartupSpark',
+  description: 'Your payment has been cancelled'
+}
 
-export default function PaymentCancelPage() {
-  const router = useRouter()
+async function CancelPage() {
+  const supabase = createServerComponentClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect('/login')
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto p-8">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-amber-500"
-              fill="none"
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <svg
+            className="h-16 w-16 text-yellow-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Payment Cancelled
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Your payment was cancelled and no charges were made.
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">
+                What would you like to do?
+              </h3>
+              <div className="mt-6 grid grid-cols-1 gap-4">
+                <a
+                  href="/pricing"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Try Again
+                </a>
+                <a
+                  href="/dashboard"
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Return to Dashboard
+                </a>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">
+                    Need help?
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 text-center text-sm">
+                <p className="text-gray-600">
+                  If you're experiencing issues or have questions,{' '}
+                  <a
+                    href="/contact"
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    contact our support team
+                  </a>
+                  .
+                </p>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Payment Cancelled
-          </h1>
+export default CancelPage
 
-          <p className="text-gray-600 mb-8">
-            Your payment was cancelled and you haven't been charged.
-            If you have any questions or concerns, please don't hesitate to contact us.
-          </p>
+```
 
-          <div className="space-y-4">
-            <Button
-              onClick={() => router.push('/pricing')}
-              className="w-full bg-primary-600 hover:bg-primary-700"
-            >
-              Try Again
-            </Button>
+# src/app/payment/success/page.tsx
 
-            <Button
-              onClick={() => router.push('/dashboard')}
-              variant="outline"
-              className="w-full"
-            >
-              Return to Dashboard
-            </Button>
+```tsx
+import { Metadata } from 'next'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { stripeService } from '@/lib/stripe/service'
 
-            <div className="text-sm text-gray-500 mt-6">
-              <p>Need help? Contact us at</p>
+export const metadata: Metadata = {
+  title: 'Payment Successful - StartupSpark',
+  description: 'Your payment has been processed successfully'
+}
+
+async function SuccessPage({
+  searchParams
+}: {
+  searchParams: { session_id?: string }
+}) {
+  const supabase = createServerComponentClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect('/login')
+  }
+
+  // If no session_id is provided, redirect to dashboard
+  if (!searchParams.session_id) {
+    redirect('/dashboard')
+  }
+
+  // Get subscription details from Stripe
+  const subscriptionDetails = await stripeService.getSubscriptionDetails(session.user.id)
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <svg
+            className="h-16 w-16 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 48 48"
+          >
+            <circle
+              className="opacity-25"
+              cx="24"
+              cy="24"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M14 24l8 8 16-16"
+            />
+          </svg>
+        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Payment Successful!
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Thank you for your subscription. Your account has been upgraded to{' '}
+          <span className="font-semibold">
+            {subscriptionDetails?.tier || 'premium'} tier
+          </span>
+          .
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">
+                What's next?
+              </h3>
+              <ul className="mt-4 list-disc list-inside text-sm text-gray-600 space-y-2">
+                <li>Your subscription is now active</li>
+                <li>You have access to all {subscriptionDetails?.tier || 'premium'} features</li>
+                <li>You can start using the enhanced capabilities right away</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-center">
               <a
-                href="mailto:support@startupspark.ai"
-                className="text-primary-600 hover:text-primary-700"
+                href="/dashboard"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                support@startupspark.ai
+                Go to Dashboard
               </a>
             </div>
           </div>
@@ -4284,350 +6316,212 @@ export default function PaymentCancelPage() {
   )
 }
 
-```
-
-# src/app/payment/success/page.tsx
-
-```tsx
-"use client"
-
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { useSubscription } from '@/lib/hooks/useSubscription'
-
-export default function PaymentSuccessPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { refreshSubscription } = useSubscription()
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const sessionId = searchParams.get('session_id')
-    if (!sessionId) {
-      router.push('/dashboard')
-      return
-    }
-
-    const verifyPayment = async () => {
-      try {
-        // Refresh subscription data
-        await refreshSubscription()
-        setLoading(false)
-      } catch (error) {
-        console.error('Error verifying payment:', error)
-        router.push('/dashboard')
-      }
-    }
-
-    verifyPayment()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Confirming your payment...</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto p-8">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-green-500"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Payment Successful!
-          </h1>
-
-          <p className="text-gray-600 mb-8">
-            Thank you for upgrading to Premium! You now have access to all premium features
-            and can generate up to 10 business ideas per month.
-          </p>
-
-          <div className="space-y-4">
-            <Button
-              onClick={() => router.push('/questionnaire')}
-              className="w-full bg-primary-600 hover:bg-primary-700"
-            >
-              Generate New Ideas
-            </Button>
-
-            <Button
-              onClick={() => router.push('/dashboard')}
-              variant="outline"
-              className="w-full"
-            >
-              Go to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+export default SuccessPage
 
 ```
 
 # src/app/pricing/page.tsx
 
 ```tsx
-"use client"
+import { Metadata } from 'next'
+import { SUBSCRIPTION_TIERS, SUBSCRIPTION_FEATURES, USAGE_LIMITS } from '@/lib/stripe/config'
+import { stripeService } from '@/lib/stripe/service'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/lib/auth/AuthContext'
-import { loadStripe } from '@stripe/stripe-js'
-import { STRIPE_CONFIG } from '@/lib/stripe/config'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-
-interface PricingPlan {
-  name: string
-  price: string
-  billingPeriod: string
-  features: string[]
-  priceId: string
-  mode: 'payment' | 'subscription'
-  popular?: boolean
+export const metadata: Metadata = {
+  title: 'Pricing - StartupSpark',
+  description: 'Choose the perfect plan for your startup journey'
 }
 
-const plans: PricingPlan[] = [
-  {
-    name: 'Free',
-    price: '$0',
-    billingPeriod: 'forever',
-    features: [
-      '1 business idea per month',
-      'Basic idea generation',
-      'Save favorites',
-      'Community support'
-    ],
-    priceId: '',
-    mode: 'payment'
-  },
-  {
-    name: 'Premium (Monthly)',
-    price: '$9.99',
-    billingPeriod: 'per month',
-    features: [
-      '10 business ideas per month',
-      'Follow-up questions',
-      'Market insights',
-      'Actionable suggestions',
-      'Priority support',
-      'Export to PDF'
-    ],
-    priceId: process.env.NEXT_PUBLIC_STRIPE_SUBSCRIPTION_PRICE_ID!,
-    mode: 'subscription',
-    popular: true
-  },
-  {
-    name: 'Premium (Annual)',
-    price: '$3.00',
-    billingPeriod: 'per month, billed annually',
-    features: [
-      'All Premium Monthly features',
-      '10 business ideas per month',
-      'Follow-up questions',
-      'Market insights',
-      'Actionable suggestions',
-      'Priority support',
-      'Export to PDF',
-      '70% savings vs monthly'
-    ],
-    priceId: process.env.NEXT_PUBLIC_STRIPE_ANNUAL_PRICE_ID!,
-    mode: 'subscription'
+async function createCheckoutSession(userId: string, tier: keyof typeof SUBSCRIPTION_TIERS) {
+  'use server'
+  const session = await stripeService.createCheckoutSession(userId, tier)
+  redirect(session.url)
+}
+
+async function PricingPage() {
+  const supabase = createServerComponentClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect('/login?next=/pricing')
   }
-]
 
-export default function PricingPage() {
-  const router = useRouter()
-  const { user, loading } = useAuth()
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('subscription_tier, subscription_status')
+    .eq('user_id', session.user.id)
+    .single()
 
-  const handlePlanSelect = async (plan: PricingPlan) => {
-    if (!user) {
-      router.push('/login?redirect=/pricing')
-      return
-    }
-
-    if (plan.name === 'Free') {
-      router.push('/dashboard')
-      return
-    }
-
-    setSelectedPlan(plan)
-    setCheckoutLoading(true)
-    setError(null)
-
-    try {
-      const stripe = await stripePromise
-      if (!stripe) throw new Error('Failed to load Stripe')
-
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: plan.priceId,
-          mode: plan.mode
-        })
-      })
-
-      const { sessionId } = await response.json()
-      const { error } = await stripe.redirectToCheckout({ sessionId })
-
-      if (error) throw error
-
-    } catch (err) {
-      console.error('Checkout error:', err)
-      setError('Failed to start checkout process. Please try again.')
-    } finally {
-      setCheckoutLoading(false)
-    }
-  }
+  const currentTier = profile?.subscription_tier || 'basic'
+  const isActive = profile?.subscription_status === 'active'
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Get personalized business ideas tailored to your skills and interests.
-            Upgrade for premium features and more ideas per month.
+          <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
+            Scale your startup journey with the perfect plan for your needs
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-3 lg:gap-12">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative bg-white rounded-2xl shadow-lg overflow-hidden
-                ${plan.popular ? 'ring-2 ring-primary-500 scale-105' : ''}
-              `}
-            >
-              {plan.popular && (
-                <div className="absolute top-0 right-0 bg-primary-500 text-white px-4 py-1 rounded-bl-lg">
-                  Most Popular
-                </div>
-              )}
+        <div className="mt-16 grid gap-8 lg:grid-cols-3 lg:gap-x-8">
+          {/* Basic Plan */}
+          <div className="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col">
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold text-gray-900">Basic</h3>
+              <p className="mt-4 flex items-baseline text-gray-900">
+                <span className="text-5xl font-extrabold tracking-tight">$9</span>
+                <span className="ml-1 text-xl font-semibold">/month</span>
+              </p>
+              <p className="mt-6 text-gray-500">Perfect for early-stage startups and solo founders.</p>
 
-              <div className="p-8">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                  {plan.name}
-                </h3>
-
-                <div className="flex items-baseline mb-8">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-gray-500 ml-2">/{plan.billingPeriod}</span>
-                </div>
-
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center">
-                      <svg
-                        className="h-5 w-5 text-green-500 mr-3"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path d="M5 13l4 4L19 7" />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  onClick={() => handlePlanSelect(plan)}
-                  className={`w-full ${
-                    plan.popular
-                      ? 'bg-primary-600 hover:bg-primary-700'
-                      : 'bg-gray-800 hover:bg-gray-900'
-                  }`}
-                  disabled={checkoutLoading && selectedPlan?.name === plan.name}
-                >
-                  {checkoutLoading && selectedPlan?.name === plan.name ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Processing...
-                    </div>
-                  ) : plan.name === 'Free' ? (
-                    'Get Started'
-                  ) : (
-                    'Select Plan'
-                  )}
-                </Button>
-              </div>
+              <ul className="mt-6 space-y-4">
+                {SUBSCRIPTION_FEATURES[SUBSCRIPTION_TIERS.basic].features.map((feature) => (
+                  <li key={feature} className="flex">
+                    <svg className="flex-shrink-0 w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="ml-3 text-gray-500">{feature}</span>
+                  </li>
+                ))}
+                <li className="flex">
+                  <svg className="flex-shrink-0 w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="ml-3 text-gray-500">
+                    {USAGE_LIMITS[SUBSCRIPTION_TIERS.basic].ideaGenerations} idea generations/month
+                  </span>
+                </li>
+              </ul>
             </div>
-          ))}
+
+            <form action={() => createCheckoutSession(session.user.id, SUBSCRIPTION_TIERS.basic)}>
+              <button
+                type="submit"
+                disabled={currentTier === SUBSCRIPTION_TIERS.basic && isActive}
+                className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium ${
+                  currentTier === SUBSCRIPTION_TIERS.basic && isActive
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {currentTier === SUBSCRIPTION_TIERS.basic && isActive ? 'Current Plan' : 'Get Started'}
+              </button>
+            </form>
+          </div>
+
+          {/* Pro Plan */}
+          <div className="relative p-8 bg-white border border-indigo-200 rounded-2xl shadow-sm flex flex-col">
+            <div className="absolute -top-4 -right-4 bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+              Popular
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold text-gray-900">Pro</h3>
+              <p className="mt-4 flex items-baseline text-gray-900">
+                <span className="text-5xl font-extrabold tracking-tight">$29</span>
+                <span className="ml-1 text-xl font-semibold">/month</span>
+              </p>
+              <p className="mt-6 text-gray-500">For growing startups that need more power.</p>
+
+              <ul className="mt-6 space-y-4">
+                {SUBSCRIPTION_FEATURES[SUBSCRIPTION_TIERS.pro].features.map((feature) => (
+                  <li key={feature} className="flex">
+                    <svg className="flex-shrink-0 w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="ml-3 text-gray-500">{feature}</span>
+                  </li>
+                ))}
+                <li className="flex">
+                  <svg className="flex-shrink-0 w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="ml-3 text-gray-500">
+                    {USAGE_LIMITS[SUBSCRIPTION_TIERS.pro].ideaGenerations} idea generations/month
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <form action={() => createCheckoutSession(session.user.id, SUBSCRIPTION_TIERS.pro)}>
+              <button
+                type="submit"
+                disabled={currentTier === SUBSCRIPTION_TIERS.pro && isActive}
+                className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium ${
+                  currentTier === SUBSCRIPTION_TIERS.pro && isActive
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {currentTier === SUBSCRIPTION_TIERS.pro && isActive ? 'Current Plan' : 'Upgrade to Pro'}
+              </button>
+            </form>
+          </div>
+
+          {/* Enterprise Plan */}
+          <div className="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col">
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold text-gray-900">Enterprise</h3>
+              <p className="mt-4 flex items-baseline text-gray-900">
+                <span className="text-5xl font-extrabold tracking-tight">$99</span>
+                <span className="ml-1 text-xl font-semibold">/month</span>
+              </p>
+              <p className="mt-6 text-gray-500">For organizations that need unlimited capabilities.</p>
+
+              <ul className="mt-6 space-y-4">
+                {SUBSCRIPTION_FEATURES[SUBSCRIPTION_TIERS.enterprise].features.map((feature) => (
+                  <li key={feature} className="flex">
+                    <svg className="flex-shrink-0 w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="ml-3 text-gray-500">{feature}</span>
+                  </li>
+                ))}
+                <li className="flex">
+                  <svg className="flex-shrink-0 w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="ml-3 text-gray-500">Unlimited idea generations</span>
+                </li>
+              </ul>
+            </div>
+
+            <form action={() => createCheckoutSession(session.user.id, SUBSCRIPTION_TIERS.enterprise)}>
+              <button
+                type="submit"
+                disabled={currentTier === SUBSCRIPTION_TIERS.enterprise && isActive}
+                className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium ${
+                  currentTier === SUBSCRIPTION_TIERS.enterprise && isActive
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {currentTier === SUBSCRIPTION_TIERS.enterprise && isActive ? 'Current Plan' : 'Contact Sales'}
+              </button>
+            </form>
+          </div>
         </div>
 
-        {error && (
-          <div className="mt-8 text-center text-red-600 bg-red-50 p-4 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <div className="mt-16 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            Frequently Asked Questions
-          </h2>
-          <div className="max-w-3xl mx-auto grid gap-8 lg:grid-cols-2">
-            <div className="text-left">
-              <h3 className="font-semibold mb-2">Can I change plans later?</h3>
-              <p className="text-gray-600">
-                Yes, you can upgrade, downgrade, or cancel your plan at any time.
-              </p>
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
-              <p className="text-gray-600">
-                We accept all major credit cards through our secure payment processor, Stripe.
-              </p>
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold mb-2">Do unused ideas roll over?</h3>
-              <p className="text-gray-600">
-                No, idea generation limits reset at the beginning of each billing cycle.
-              </p>
-            </div>
-            <div className="text-left">
-              <h3 className="font-semibold mb-2">Is there a refund policy?</h3>
-              <p className="text-gray-600">
-                Yes, contact us within 14 days of purchase for a full refund if you're not satisfied.
-              </p>
-            </div>
-          </div>
+        <div className="mt-12 text-center">
+          <p className="text-base text-gray-500">
+            All plans include a 14-day free trial. No credit card required.
+          </p>
+          <p className="mt-4 text-sm text-gray-500">
+            Need a custom plan? <a href="/contact" className="text-indigo-600 hover:text-indigo-500">Contact us</a>
+          </p>
         </div>
       </div>
     </div>
   )
 }
+
+export default PricingPage
 
 ```
 
@@ -4636,99 +6530,84 @@ export default function PricingPage() {
 ```tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import QuestionCard from '@/components/questionnaire/QuestionCard';
-
-const questions = [
-  {
-    id: '1',
-    section: 'Personal Interests and Passions',
-    text: 'What activities or topics are you most passionate about?',
-    type: 'text' as const,
-    aiSuggestion: 'Think about activities that make you lose track of time.',
-    followUpQuestion: 'What specifically excites you about these activities?'
-  },
-  {
-    id: '2',
-    section: 'Personal Interests and Passions',
-    text: 'Would you prefer your business to align with your personal passions?',
-    type: 'yes-no' as const,
-    aiSuggestion: 'Consider how combining passion with business could affect your motivation.'
-  },
-  {
-    id: '3',
-    section: 'Skills and Expertise',
-    text: 'How would you rate your comfort level with technology?',
-    type: 'scale' as const,
-    aiSuggestion: '1 = Beginner, 5 = Expert. This helps us suggest suitable tech-based opportunities.'
-  },
-  {
-    id: '4',
-    section: 'Market Trends',
-    text: 'Which current market trends interest you the most?',
-    type: 'multiple' as const,
-    options: [
-      'Artificial Intelligence',
-      'Sustainability',
-      'Remote Work Solutions',
-      'Health Tech',
-      'E-commerce',
-      'Educational Technology'
-    ],
-    homework: 'Research the growth potential of your selected trends over the next 5 years.'
-  },
-  {
-    id: '5',
-    section: 'Business Model Preference',
-    text: 'What type of business model interests you?',
-    type: 'multiple' as const,
-    options: [
-      'Digital Products',
-      'Physical Products',
-      'Services',
-      'Subscription-based',
-      'Marketplace',
-      'Consulting'
-    ],
-    aiSuggestion: 'Consider which models align with your lifestyle and skills.'
-  }
-];
+import { questions, QuestionnaireProgress } from '@/lib/questionnaire/questions';
 
 export default function QuestionnairePage() {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [isComplete, setIsComplete] = useState(false);
+  const router = useRouter();
+  const [currentProgress, setCurrentProgress] = useState<QuestionnaireProgress>(() => {
+    // Try to load saved progress from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('questionnaireProgress');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved progress:', e);
+        }
+      }
+    }
+    
+    // Default initial state
+    return {
+      currentQuestionId: questions[0].id,
+      answers: {},
+      completed: false
+    };
+  });
 
-  const handleAnswer = (answer: any) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questions[currentQuestionIndex].id]: answer
-    }));
-  };
+  const currentQuestion = questions.find(q => q.id === currentProgress.currentQuestionId);
 
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+  const handleSubmit = async (answer: any, nextQuestionId: string | null) => {
+    const newAnswers = {
+      ...currentProgress.answers,
+      [currentQuestion!.id]: answer
+    };
+
+    if (nextQuestionId) {
+      // Move to next question
+      setCurrentProgress({
+        currentQuestionId: nextQuestionId,
+        answers: newAnswers,
+        completed: false
+      });
     } else {
-      setIsComplete(true);
-      // Here you would typically submit the answers to your API
-      console.log('Questionnaire completed:', answers);
+      // Questionnaire completed
+      const finalProgress = {
+        currentQuestionId: currentQuestion!.id,
+        answers: newAnswers,
+        completed: true
+      };
+      
+      setCurrentProgress(finalProgress);
+      localStorage.setItem('questionnaireProgress', JSON.stringify(finalProgress));
+      
+      // Navigate to results page
+      router.push('/questionnaire/results');
     }
   };
 
-  if (isComplete) {
+  if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Thanks for completing the questionnaire!
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            We're analyzing your answers to generate personalized business recommendations.
-          </p>
-          <div className="animate-pulse flex justify-center">
-            <div className="h-8 w-8 bg-blue-600 rounded-full"></div>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error</h1>
+          <p>Question not found. Please try restarting the questionnaire.</p>
+          <button
+            onClick={() => {
+              localStorage.removeItem('questionnaireProgress');
+              setCurrentProgress({
+                currentQuestionId: questions[0].id,
+                answers: {},
+                completed: false
+              });
+            }}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Restart Questionnaire
+          </button>
         </div>
       </div>
     );
@@ -4736,30 +6615,11 @@ export default function QuestionnairePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Business Idea Discovery
-            </h2>
-            <span className="text-sm text-gray-500">
-              Question {currentQuestionIndex + 1} of {questions.length}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-              style={{
-                width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`
-              }}
-            />
-          </div>
-        </div>
-
+      <div className="max-w-3xl mx-auto">
         <QuestionCard
-          question={questions[currentQuestionIndex]}
-          onSubmit={handleAnswer}
-          onNext={handleNext}
+          question={currentQuestion}
+          onSubmit={handleSubmit}
+          currentProgress={currentProgress}
         />
       </div>
     </div>
@@ -4929,6 +6789,125 @@ export default function QuestionnaireResults() {
 
 ```
 
+# src/app/shared-ideas/[id]/page.tsx
+
+```tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { BusinessIdea } from '@/lib/ai/types';
+import { SharedIdeaView } from '@/components/dashboard/shared-idea-view';
+
+export default function SharedIdeaPage() {
+  const params = useParams();
+  const [idea, setIdea] = useState<BusinessIdea | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSharedIdea = async () => {
+      try {
+        setIsLoading(true);
+        // In a real implementation, you would decode the ID and fetch from your backend
+        const decodedData = JSON.parse(atob(params.id as string));
+        
+        // Placeholder: Fetch idea details from your API
+        const response = await fetch(`/api/shared-ideas/${decodedData.ideaId}`);
+        if (!response.ok) {
+          throw new Error('Failed to load shared idea');
+        }
+        
+        const data = await response.json();
+        setIdea(data);
+      } catch (err) {
+        console.error('Error loading shared idea:', err);
+        setError('This shared idea link is invalid or has expired');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchSharedIdea();
+    }
+  }, [params.id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse space-y-4">
+          <div className="h-12 w-48 bg-gray-200 rounded"></div>
+          <div className="h-4 w-32 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full mx-auto text-center">
+          <div className="rounded-lg bg-white p-8 shadow">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 48 48"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h2 className="mt-2 text-lg font-medium text-gray-900">
+              Shared Idea Not Found
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">{error}</p>
+            <div className="mt-6">
+              <a
+                href="/"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Return Home
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!idea) {
+    return null;
+  }
+
+  const handleSave = async () => {
+    // Implement save functionality
+    console.log('Saving idea:', idea);
+  };
+
+  const handleClone = async () => {
+    // Implement clone functionality
+    console.log('Cloning idea:', idea);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <SharedIdeaView
+        idea={idea}
+        onSave={handleSave}
+        onClone={handleClone}
+        className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
+      />
+    </div>
+  );
+}
+
+```
+
 # src/components/auth/AuthProviderWrapper.tsx
 
 ```tsx
@@ -4938,6 +6917,868 @@ import { AuthProvider } from "@/lib/auth/AuthContext"
 
 export function AuthProviderWrapper({ children }: { children: React.ReactNode }) {
   return <AuthProvider>{children}</AuthProvider>
+}
+
+```
+
+# src/components/dashboard/analytics-panel.tsx
+
+```tsx
+import { FC } from 'react'
+
+interface AnalyticsPanelProps {
+  userId: string
+}
+
+export const AnalyticsPanel: FC<AnalyticsPanelProps> = ({ userId }) => {
+  return (
+    <div className="bg-white rounded-lg shadow">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <h2 className="text-lg font-medium text-gray-900">Analytics Overview</h2>
+      </div>
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Ideas Generated */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <dt className="text-sm font-medium text-gray-500">Ideas Generated</dt>
+            <dd className="mt-1 text-3xl font-semibold text-gray-900">0</dd>
+            <p className="mt-1 text-sm text-gray-500">Last 30 days</p>
+          </div>
+
+          {/* Ideas Saved */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <dt className="text-sm font-medium text-gray-500">Ideas Saved</dt>
+            <dd className="mt-1 text-3xl font-semibold text-gray-900">0</dd>
+            <p className="mt-1 text-sm text-gray-500">Total saved ideas</p>
+          </div>
+
+          {/* AI Queries */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <dt className="text-sm font-medium text-gray-500">AI Queries</dt>
+            <dd className="mt-1 text-3xl font-semibold text-gray-900">0</dd>
+            <p className="mt-1 text-sm text-gray-500">This month</p>
+          </div>
+
+          {/* Success Rate */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <dt className="text-sm font-medium text-gray-500">Success Rate</dt>
+            <dd className="mt-1 text-3xl font-semibold text-gray-900">0%</dd>
+            <p className="mt-1 text-sm text-gray-500">Ideas rated positively</p>
+          </div>
+        </div>
+
+        {/* Placeholder for future analytics features */}
+        <div className="mt-6">
+          <p className="text-sm text-gray-500">
+            More detailed analytics coming soon...
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+```
+
+# src/components/dashboard/export-features.tsx
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Button } from '@/components/ui/button';
+import { Alert } from '@/components/ui/alert';
+
+interface ExportData {
+  savedRecommendations: any[];
+  questionnaireResponses: any[];
+}
+
+export function ExportFeatures() {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const supabase = createClientComponentClient();
+
+  const fetchUserData = async (): Promise<ExportData> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data: recommendations } = await supabase
+      .from('saved_recommendations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    const { data: responses } = await supabase
+      .from('questionnaire_responses')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    return {
+      savedRecommendations: recommendations || [],
+      questionnaireResponses: responses || [],
+    };
+  };
+
+  const exportToJSON = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchUserData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'startupspark-data.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setMessage({ type: 'success', text: 'Data exported successfully' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to export data' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportToCSV = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchUserData();
+      
+      // Convert recommendations to CSV
+      const recommendationsCSV = [
+        ['Type', 'Content', 'Notes', 'Favorite', 'Created At'],
+        ...data.savedRecommendations.map(rec => [
+          rec.recommendation_type,
+          rec.content,
+          rec.notes || '',
+          rec.is_favorite ? 'Yes' : 'No',
+          new Date(rec.created_at).toLocaleDateString()
+        ])
+      ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+      // Convert responses to CSV
+      const responsesCSV = [
+        ['Experience', 'Interests', 'Commitment', 'Resources', 'Created At'],
+        ...data.questionnaireResponses.map(resp => [
+          resp.experience,
+          resp.interests,
+          resp.commitment,
+          resp.resources,
+          new Date(resp.created_at).toLocaleDateString()
+        ])
+      ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+      // Create and download recommendations CSV
+      const recommendationsBlob = new Blob([recommendationsCSV], { type: 'text/csv' });
+      const recommendationsUrl = URL.createObjectURL(recommendationsBlob);
+      const recommendationsLink = document.createElement('a');
+      recommendationsLink.href = recommendationsUrl;
+      recommendationsLink.download = 'startupspark-recommendations.csv';
+      document.body.appendChild(recommendationsLink);
+      recommendationsLink.click();
+      document.body.removeChild(recommendationsLink);
+      URL.revokeObjectURL(recommendationsUrl);
+
+      // Create and download responses CSV
+      const responsesBlob = new Blob([responsesCSV], { type: 'text/csv' });
+      const responsesUrl = URL.createObjectURL(responsesBlob);
+      const responsesLink = document.createElement('a');
+      responsesLink.href = responsesUrl;
+      responsesLink.download = 'startupspark-responses.csv';
+      document.body.appendChild(responsesLink);
+      responsesLink.click();
+      document.body.removeChild(responsesLink);
+      URL.revokeObjectURL(responsesUrl);
+
+      setMessage({ type: 'success', text: 'Data exported successfully' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to export data' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white shadow-sm rounded-lg p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Export Your Data</h2>
+
+      {message && (
+        <Alert
+          variant={message.type === 'success' ? 'default' : 'destructive'}
+          className="mb-4"
+        >
+          {message.text}
+        </Alert>
+      )}
+
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-medium text-gray-900 mb-2">Export Options</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Download your saved ideas and questionnaire responses in your preferred format.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button
+            variant="outline"
+            onClick={exportToJSON}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? 'Exporting...' : 'Export as JSON'}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={exportToCSV}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? 'Exporting...' : 'Export as CSV'}
+          </Button>
+        </div>
+
+        <div className="mt-4 text-sm text-gray-500">
+          <p>Your export will include:</p>
+          <ul className="list-disc list-inside mt-2">
+            <li>All saved business ideas and recommendations</li>
+            <li>Your questionnaire responses</li>
+            <li>Creation dates and notes</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+# src/components/dashboard/idea-detail-view.tsx
+
+```tsx
+'use client';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BusinessIdea } from '@/lib/ai/types';
+
+interface IdeaDetailViewProps {
+  idea: BusinessIdea;
+  onClose: () => void;
+  onShare?: () => void;
+  className?: string;
+}
+
+export function IdeaDetailView({ idea, onClose, onShare, className = '' }: IdeaDetailViewProps) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'market' | 'execution'>('overview');
+  const [isSharing, setIsSharing] = useState(false);
+
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'market', label: 'Market Analysis' },
+    { id: 'execution', label: 'Execution Plan' }
+  ] as const;
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      if (onShare) {
+        await onShare();
+      } else {
+        await navigator.share({
+          title: idea.name,
+          text: idea.description,
+          url: window.location.href
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className={`bg-white rounded-lg shadow-xl overflow-hidden ${className}`}
+    >
+      <div className="relative">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <motion.h2
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-2xl font-bold text-gray-900"
+            >
+              {idea.name}
+            </motion.h2>
+            <div className="flex items-center space-x-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleShare}
+                disabled={isSharing}
+                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  />
+                </svg>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  relative min-w-0 flex-1 overflow-hidden py-4 px-4 text-center text-sm font-medium focus:outline-none
+                  ${activeTab === tab.id
+                    ? 'text-indigo-600 border-b-2 border-indigo-500'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500"
+                  />
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-4">
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-4"
+              >
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Description</h3>
+                  <p className="mt-1 text-gray-600">{idea.description}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Required Skills</h3>
+                  <p className="mt-1 text-gray-600">{idea.skills}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Initial Investment</h3>
+                  <p className="mt-1 text-gray-600">{idea.investment}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'market' && (
+              <motion.div
+                key="market"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-4"
+              >
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Target Market</h3>
+                  <p className="mt-1 text-gray-600">{idea.targetMarket}</p>
+                </div>
+                {idea.marketSize && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Market Size</h3>
+                    <p className="mt-1 text-gray-600">{idea.marketSize}</p>
+                  </div>
+                )}
+                {idea.competitiveAdvantage && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Competitive Advantage</h3>
+                    <p className="mt-1 text-gray-600">{idea.competitiveAdvantage}</p>
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Market Validation</h3>
+                  <p className="mt-1 text-gray-600">{idea.validation}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'execution' && (
+              <motion.div
+                key="execution"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-4"
+              >
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">First Steps</h3>
+                  <p className="mt-1 text-gray-600">{idea.steps}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Success Metrics</h3>
+                  <p className="mt-1 text-gray-600">{idea.metrics}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Potential Challenges</h3>
+                  <p className="mt-1 text-gray-600">{idea.challenges}</p>
+                </div>
+                {idea.timeToMarket && (
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">Time to Market</h3>
+                    <p className="mt-1 text-gray-600">{idea.timeToMarket}</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+```
+
+# src/components/dashboard/idea-grid.tsx
+
+```tsx
+'use client';
+
+import React, { useState } from 'react';
+import { BusinessIdea } from '@/lib/ai/types';
+import { IdeaDetailView } from './idea-detail-view';
+
+interface IdeaGridProps {
+  userId: string;
+  ideas: BusinessIdea[];
+  limit?: number;
+  onShare?: (idea: BusinessIdea) => Promise<void>;
+}
+
+export function IdeaGrid({ userId, ideas, limit = 10, onShare }: IdeaGridProps) {
+  const [selectedIdea, setSelectedIdea] = useState<BusinessIdea | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const displayedIdeas = ideas.slice(0, limit);
+
+  const handleShare = async (idea: BusinessIdea) => {
+    if (onShare) {
+      await onShare(idea);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {displayedIdeas.map((idea) => (
+          <div
+            key={idea.name}
+            className={`
+              relative group bg-white rounded-lg shadow-sm overflow-hidden
+              transform transition-all duration-200 ease-in-out
+              hover:shadow-lg hover:-translate-y-1
+              ${hoveredId === idea.name ? 'ring-2 ring-indigo-500' : ''}
+            `}
+            onMouseEnter={() => setHoveredId(idea.name)}
+            onMouseLeave={() => setHoveredId(null)}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                  {idea.name}
+                </h3>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare(idea);
+                  }}
+                  className="p-1 text-gray-400 hover:text-gray-500 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-gray-500 line-clamp-3">
+                {idea.description}
+              </p>
+              <div className="mt-4">
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {idea.investment}
+                  </span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {idea.targetMarket.split(' ')[0]}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedIdea(idea)}
+                className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                View Details
+                <svg
+                  className="ml-2 -mr-1 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-white via-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+              aria-hidden="true"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {ideas.length === 0 && (
+        <div className="text-center py-12">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 48 48"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M8 14v20c0 4.418 7.163 8 16 8 1.381 0 2.721-.087 4-.252M24 38c8.837 0 16-3.582 16-8V14M24 6c-8.837 0-16 3.582-16 8s7.163 8 16 8c8.837 0 16-3.582 16-8s-7.163-8-16-8z"
+            />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No ideas yet</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by generating your first business idea.
+          </p>
+          <div className="mt-6">
+            <a
+              href="/questionnaire"
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Generate Ideas
+              <svg
+                className="ml-2 -mr-1 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Idea Detail Modal */}
+      {selectedIdea && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setSelectedIdea(null)}
+            />
+            <span
+              className="hidden sm:inline-block sm:h-screen sm:align-middle"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+              <IdeaDetailView
+                idea={selectedIdea}
+                onClose={() => setSelectedIdea(null)}
+                onShare={() => handleShare(selectedIdea)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+```
+
+# src/components/dashboard/keyboard-shortcuts-modal.tsx
+
+```tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '../ui/button';
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from '@/lib/hooks/use-keyboard-shortcuts';
+
+interface ShortcutItem {
+  key: string;
+  description: string;
+}
+
+const SHORTCUTS: ShortcutItem[] = [
+  { key: '⌘/Ctrl + K', description: 'Search ideas' },
+  { key: '⌘/Ctrl + N', description: 'Create new idea' },
+  { key: '⌘/Ctrl + S', description: 'Save changes' },
+  { key: 'Esc', description: 'Close modal' },
+  { key: '←/→', description: 'Navigate between ideas' },
+  { key: 'Space', description: 'Select/deselect idea' },
+];
+
+export function KeyboardShortcutsModal() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useKeyboardShortcuts([
+    {
+      ...COMMON_SHORTCUTS.CLOSE,
+      handler: () => setIsOpen(false),
+    },
+  ]);
+
+  // Prevent scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <div className="fixed bottom-4 right-4">
+        <Button
+          variant="outline"
+          className="bg-white"
+          onClick={() => setIsOpen(true)}
+        >
+          ⌘ Keyboard Shortcuts
+        </Button>
+      </div>
+
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Keyboard Shortcuts</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {SHORTCUTS.map((shortcut) => (
+                <div
+                  key={shortcut.key}
+                  className="flex justify-between items-center py-2"
+                >
+                  <span className="text-gray-600">{shortcut.description}</span>
+                  <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-sm font-mono">
+                    {shortcut.key}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 pt-6 border-t">
+              <p className="text-sm text-gray-500">
+                Press <kbd className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-mono">Esc</kbd> to close this modal
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+```
+
+# src/components/dashboard/profile-settings.tsx
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert } from '@/components/ui/alert';
+import { useAuth } from '@/lib/auth/AuthContext';
+
+interface ProfileData {
+  email: string;
+  name?: string;
+  notifications: boolean;
+}
+
+export function ProfileSettings() {
+  const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [profileData, setProfileData] = useState<ProfileData>({
+    email: user?.email || '',
+    name: user?.user_metadata?.name || '',
+    notifications: true,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // Update profile logic would go here
+      setMessage({ type: 'success', text: 'Profile updated successfully' });
+      setIsEditing(false);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to update profile' });
+    }
+  };
+
+  return (
+    <div className="bg-white shadow-sm rounded-lg p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-900">Profile Settings</h2>
+        <Button
+          variant="outline"
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          {isEditing ? 'Cancel' : 'Edit Profile'}
+        </Button>
+      </div>
+
+      {message && (
+        <Alert
+          variant={message.type === 'success' ? 'default' : 'destructive'}
+          className="mb-4"
+        >
+          {message.text}
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <Input
+            type="email"
+            value={profileData.email}
+            disabled={true}
+            className="bg-gray-50"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Name
+          </label>
+          <Input
+            type="text"
+            value={profileData.name}
+            onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+            disabled={!isEditing}
+          />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="notifications"
+            checked={profileData.notifications}
+            onChange={(e) => setProfileData({ ...profileData, notifications: e.target.checked })}
+            disabled={!isEditing}
+            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          />
+          <label htmlFor="notifications" className="text-sm text-gray-700">
+            Receive email notifications about new recommendations
+          </label>
+        </div>
+
+        {isEditing && (
+          <div className="flex justify-end">
+            <Button type="submit" variant="default">
+              Save Changes
+            </Button>
+          </div>
+        )}
+      </form>
+    </div>
+  );
 }
 
 ```
@@ -5134,6 +7975,889 @@ export function SavedRecommendations({ userId }: SavedRecommendationsProps) {
       )}
     </div>
   )
+}
+
+```
+
+# src/components/dashboard/shared-idea-view.tsx
+
+```tsx
+'use client';
+
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { BusinessIdea } from '@/lib/ai/types';
+import { useIdeaSharing } from '@/lib/hooks/useIdeaSharing';
+
+interface SharedIdeaViewProps {
+  idea: BusinessIdea;
+  userId?: string;
+  onSave?: () => Promise<void>;
+  onClone?: () => Promise<void>;
+  className?: string;
+}
+
+export function SharedIdeaView({
+  idea,
+  userId,
+  onSave,
+  onClone,
+  className = ''
+}: SharedIdeaViewProps) {
+  const [activeSection, setActiveSection] = useState<string>('overview');
+  const { shareIdea, isSharing, error } = useIdeaSharing(userId || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCloning, setIsCloning] = useState(false);
+
+  const sections = [
+    {
+      id: 'overview',
+      title: 'Overview',
+      content: [
+        { label: 'Description', value: idea.description },
+        { label: 'Required Skills', value: idea.skills },
+        { label: 'Initial Investment', value: idea.investment }
+      ]
+    },
+    {
+      id: 'market',
+      title: 'Market Analysis',
+      content: [
+        { label: 'Target Market', value: idea.targetMarket },
+        { label: 'Market Size', value: idea.marketSize },
+        { label: 'Market Validation', value: idea.validation }
+      ]
+    },
+    {
+      id: 'execution',
+      title: 'Execution Plan',
+      content: [
+        { label: 'First Steps', value: idea.steps },
+        { label: 'Success Metrics', value: idea.metrics },
+        { label: 'Challenges', value: idea.challenges }
+      ]
+    }
+  ];
+
+  const handleSave = async () => {
+    if (!onSave) return;
+    setIsSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleClone = async () => {
+    if (!onClone) return;
+    setIsCloning(true);
+    try {
+      await onClone();
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
+  return (
+    <div className={`bg-white rounded-lg shadow-xl overflow-hidden ${className}`}>
+      {/* Header */}
+      <div className="relative">
+        <div className="px-6 py-16 sm:px-12 sm:py-24 lg:px-16 bg-gradient-to-r from-indigo-600 to-purple-600">
+          <div className="relative max-w-3xl mx-auto text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
+            >
+              {idea.name}
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6 text-xl text-indigo-100 max-w-2xl mx-auto"
+            >
+              {idea.description}
+            </motion.p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Section Navigation */}
+        <div className="border-b border-gray-200 mb-8">
+          <nav className="-mb-px flex space-x-8">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`
+                  whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
+                  ${activeSection === section.id
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                {section.title}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Active Section Content */}
+        <motion.div
+          key={activeSection}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+        >
+          {sections
+            .find((s) => s.id === activeSection)
+            ?.content.map((item) => (
+              <div
+                key={item.label}
+                className="bg-white overflow-hidden shadow rounded-lg"
+              >
+                <div className="px-4 py-5 sm:p-6">
+                  <dt className="text-sm font-medium text-gray-500">
+                    {item.label}
+                  </dt>
+                  <dd className="mt-1 text-lg font-semibold text-gray-900">
+                    {item.value}
+                  </dd>
+                </div>
+              </div>
+            ))}
+        </motion.div>
+
+        {/* Action Buttons */}
+        <div className="mt-12 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          {onSave && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSave}
+              disabled={isSaving}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {isSaving ? 'Saving...' : 'Save Idea'}
+            </motion.button>
+          )}
+
+          {onClone && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleClone}
+              disabled={isCloning}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {isCloning ? 'Cloning...' : 'Clone Idea'}
+            </motion.button>
+          )}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => shareIdea(idea)}
+            disabled={isSharing}
+            className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            {isSharing ? 'Sharing...' : 'Share'}
+            <svg
+              className="ml-2 -mr-1 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              />
+            </svg>
+          </motion.button>
+        </div>
+
+        {error && (
+          <div className="mt-4 text-sm text-red-600 text-center">
+            {error.message}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+```
+
+# src/components/dashboard/subscription-manager.tsx
+
+```tsx
+import { useEffect, useState } from 'react'
+import { stripeService } from '@/lib/stripe/service'
+import { SUBSCRIPTION_TIERS, SUBSCRIPTION_FEATURES, SubscriptionTier } from '@/lib/stripe/config'
+
+type SubscriptionDetails = {
+  id: string
+  tier: SubscriptionTier
+  status: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  usage?: {
+    ideaGenerations: number
+    savedIdeas: number
+    aiQueries: number
+  }
+}
+
+export default function SubscriptionManager({ userId }: { userId: string }) {
+  const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+
+  useEffect(() => {
+    async function fetchSubscription() {
+      try {
+        const details = await stripeService.getSubscriptionDetails(userId)
+        if (details) {
+          setSubscription({
+            id: details.id,
+            tier: details.tier,
+            status: details.status,
+            current_period_end: details.current_period_end,
+            cancel_at_period_end: details.cancel_at_period_end || false,
+            usage: details.usage
+          })
+        }
+      } catch (err) {
+        setError('Failed to load subscription details')
+        console.error('Error fetching subscription:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSubscription()
+  }, [userId])
+
+  const handleManageSubscription = async () => {
+    try {
+      const { url } = await stripeService.createPortalSession(userId)
+      window.location.href = url
+    } catch (err) {
+      setError('Failed to open subscription portal')
+      console.error('Error opening portal:', err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-48 bg-gray-200 rounded-lg"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 p-4 rounded-lg">
+        <p className="text-red-800">{error}</p>
+      </div>
+    )
+  }
+
+  if (!subscription) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          No Active Subscription
+        </h2>
+        <p className="text-gray-600 mb-4">
+          Upgrade your account to access premium features and increased usage limits.
+        </p>
+        <a
+          href="/pricing"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+        >
+          View Plans
+        </a>
+      </div>
+    )
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow">
+      <div className="p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Subscription Details
+          </h2>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              subscription.status === 'active'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-yellow-100 text-yellow-800'
+            }`}
+          >
+            {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+          </span>
+        </div>
+
+        <dl className="mt-6 space-y-6 divide-y divide-gray-200">
+          <div className="pt-6 md:grid md:grid-cols-3 md:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Current plan</dt>
+            <dd className="mt-1 text-sm text-gray-900 md:mt-0 md:col-span-2">
+              {subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)}
+            </dd>
+          </div>
+
+          <div className="pt-6 md:grid md:grid-cols-3 md:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Billing period</dt>
+            <dd className="mt-1 text-sm text-gray-900 md:mt-0 md:col-span-2">
+              {subscription.cancel_at_period_end
+                ? `Cancels on ${formatDate(subscription.current_period_end)}`
+                : `Renews on ${formatDate(subscription.current_period_end)}`}
+            </dd>
+          </div>
+
+          <div className="pt-6 md:grid md:grid-cols-3 md:gap-4">
+            <dt className="text-sm font-medium text-gray-500">Features</dt>
+            <dd className="mt-1 text-sm text-gray-900 md:mt-0 md:col-span-2">
+              <ul className="list-disc list-inside space-y-1">
+                {SUBSCRIPTION_FEATURES[subscription.tier].features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+
+          {subscription.usage && (
+            <div className="pt-6 md:grid md:grid-cols-3 md:gap-4">
+              <dt className="text-sm font-medium text-gray-500">Current Usage</dt>
+              <dd className="mt-1 text-sm text-gray-900 md:mt-0 md:col-span-2">
+                <ul className="space-y-1">
+                  <li>Idea Generations: {subscription.usage.ideaGenerations}</li>
+                  <li>Saved Ideas: {subscription.usage.savedIdeas}</li>
+                  <li>AI Queries: {subscription.usage.aiQueries}</li>
+                </ul>
+              </dd>
+            </div>
+          )}
+        </dl>
+
+        <div className="mt-8 space-y-4">
+          <button
+            onClick={handleManageSubscription}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Manage Subscription
+          </button>
+
+          {!subscription.cancel_at_period_end && (
+            <button
+              onClick={() => setShowCancelConfirm(true)}
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Cancel Subscription
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowCancelConfirm(false)}
+            ></div>
+
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div>
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <svg
+                    className="h-6 w-6 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Cancel Subscription?
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Are you sure you want to cancel your subscription? You'll continue to have access to premium features until the end of your current billing period.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                <button
+                  type="button"
+                  onClick={handleManageSubscription}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:col-start-2 sm:text-sm"
+                >
+                  Cancel Subscription
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                >
+                  Keep Subscription
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+```
+
+# src/components/dashboard/usage-analytics.tsx
+
+```tsx
+import { useEffect, useState } from 'react'
+import { usageService } from '@/lib/usage/service'
+import { USAGE_LIMITS, SubscriptionTier } from '@/lib/stripe/config'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts'
+
+interface UsageData {
+  current: {
+    ideaGenerations: number
+    savedIdeas: number
+    aiQueries: number
+  }
+  limits: typeof USAGE_LIMITS[SubscriptionTier]
+  history: Array<{
+    date: string
+    ideaGenerations: number
+    savedIdeas: number
+    aiQueries: number
+  }>
+}
+
+export default function UsageAnalytics({ userId }: { userId: string }) {
+  const [usageData, setUsageData] = useState<UsageData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchUsageData() {
+      try {
+        const data = await usageService.getUsageAnalytics(userId)
+        setUsageData(data)
+      } catch (err) {
+        setError('Failed to load usage data')
+        console.error('Error fetching usage data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsageData()
+  }, [userId])
+
+  if (loading) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-64 bg-gray-200 rounded-lg"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 p-4 rounded-lg">
+        <p className="text-red-800">{error}</p>
+      </div>
+    )
+  }
+
+  if (!usageData) {
+    return null
+  }
+
+  const { current, limits, history } = usageData
+
+  // Calculate usage percentages
+  const getUsagePercentage = (current: number, limit: number) => {
+    if (limit === -1) return 0 // Unlimited
+    return Math.round((current / limit) * 100)
+  }
+
+  const formatUsageValue = (current: number, limit: number) => {
+    if (limit === -1) return `${current} / ∞`
+    return `${current} / ${limit}`
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">Usage Analytics</h2>
+
+      {/* Current Usage Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {Object.entries(current).map(([key, value]) => {
+          const limit = limits[key as keyof typeof limits]
+          const percentage = getUsagePercentage(value, limit)
+          const isNearLimit = percentage >= 80 && percentage < 100
+          const isOverLimit = percentage >= 100
+
+          return (
+            <div key={key} className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-500 capitalize">
+                {key.replace(/([A-Z])/g, ' $1').trim()}
+              </h3>
+              <p className="mt-2 text-3xl font-semibold text-gray-900">
+                {formatUsageValue(value, limit)}
+              </p>
+              <div className="mt-2">
+                <div className="relative pt-1">
+                  <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                    <div
+                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                      className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                        isOverLimit
+                          ? 'bg-red-500'
+                          : isNearLimit
+                          ? 'bg-yellow-500'
+                          : 'bg-green-500'
+                      }`}
+                    ></div>
+                  </div>
+                </div>
+                {(isNearLimit || isOverLimit) && (
+                  <p className={`mt-1 text-sm ${isOverLimit ? 'text-red-600' : 'text-yellow-600'}`}>
+                    {isOverLimit ? 'Usage limit exceeded' : 'Approaching usage limit'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Usage History Chart */}
+      <div className="mt-8">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Usage History</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={history}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(value) => new Date(value).toLocaleDateString()}
+              />
+              <YAxis />
+              <Tooltip
+                labelFormatter={(value) => new Date(value).toLocaleDateString()}
+              />
+              <Bar dataKey="ideaGenerations" fill="#4F46E5" name="Idea Generations" />
+              <Bar dataKey="savedIdeas" fill="#10B981" name="Saved Ideas" />
+              <Bar dataKey="aiQueries" fill="#6366F1" name="AI Queries" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Upgrade CTA */}
+      {Object.values(current).some((value, index) => {
+        const limit = Object.values(limits)[index]
+        return limit !== -1 && value >= limit * 0.8
+      }) && (
+        <div className="mt-8 bg-indigo-50 p-4 rounded-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-indigo-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-indigo-800">
+                Approaching Usage Limits
+              </h3>
+              <div className="mt-2 text-sm text-indigo-700">
+                <p>
+                  You're approaching your usage limits. Consider upgrading your plan
+                  to ensure uninterrupted access to all features.
+                </p>
+              </div>
+              <div className="mt-4">
+                <div className="-mx-2 -my-1.5 flex">
+                  <a
+                    href="/pricing"
+                    className="bg-indigo-600 px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    View Plans
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+```
+
+# src/components/dashboard/usage-statistics.tsx
+
+```tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Button } from '@/components/ui/button';
+import { usageService } from '@/lib/usage/service';
+
+interface UsageStats {
+  savedIdeasCount: number;
+  questionnaireResponses: number;
+  subscriptionTier: string;
+  subscriptionStatus: string;
+  periodEnd?: string;
+  featureUsage: {
+    idea_generations: number;
+    market_insights: number;
+    follow_up_questions: number;
+  };
+}
+
+const FEATURE_LIMITS = {
+  free: {
+    idea_generations: 3,
+    market_insights: 0,
+    follow_up_questions: 0
+  },
+  premium: {
+    idea_generations: -1, // Unlimited
+    market_insights: -1,
+    follow_up_questions: -1
+  }
+};
+
+export function UsageStatistics() {
+  const [stats, setStats] = useState<UsageStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Fetch user profile data
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('subscription_tier, subscription_status, subscription_period_end')
+          .eq('user_id', user.id)
+          .single();
+
+        // Fetch saved recommendations count
+        const { count: savedCount } = await supabase
+          .from('saved_recommendations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        // Fetch questionnaire responses count
+        const { count: responseCount } = await supabase
+          .from('questionnaire_responses')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        // Fetch feature usage
+        const featureUsage = await usageService.getCurrentUsage(user.id);
+
+        setStats({
+          savedIdeasCount: savedCount || 0,
+          questionnaireResponses: responseCount || 0,
+          subscriptionTier: profile?.subscription_tier || 'free',
+          subscriptionStatus: profile?.subscription_status || 'inactive',
+          periodEnd: profile?.subscription_period_end,
+          featureUsage
+        });
+      } catch (error) {
+        console.error('Error fetching usage statistics:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, [supabase]);
+
+  const getUsageDisplay = (feature: keyof typeof FEATURE_LIMITS.free, count: number) => {
+    const limit = stats ? FEATURE_LIMITS[stats.subscriptionTier as keyof typeof FEATURE_LIMITS][feature] : 0;
+    if (limit === -1) return `${count} (Unlimited)`;
+    return `${count} / ${limit}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-3">
+            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white shadow-sm rounded-lg p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Usage Statistics</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Subscription Plan</h3>
+            <p className="mt-1 text-2xl font-semibold text-gray-900 capitalize">
+              {stats?.subscriptionTier}
+            </p>
+          </div>
+          
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Status</h3>
+            <p className="mt-1 text-lg font-medium capitalize">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium
+                ${stats?.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800' : 
+                  'bg-yellow-100 text-yellow-800'}`}>
+                {stats?.subscriptionStatus}
+              </span>
+            </p>
+          </div>
+
+          {stats?.periodEnd && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Next Billing Date</h3>
+              <p className="mt-1 text-lg font-medium">
+                {new Date(stats.periodEnd).toLocaleDateString()}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Feature Usage This Period</h3>
+            <div className="mt-2 space-y-2">
+              <div>
+                <p className="text-sm text-gray-600">Business Ideas Generated</p>
+                <p className="text-lg font-semibold">
+                  {getUsageDisplay('idea_generations', stats?.featureUsage.idea_generations || 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Market Insights Used</p>
+                <p className="text-lg font-semibold">
+                  {getUsageDisplay('market_insights', stats?.featureUsage.market_insights || 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Follow-up Questions Asked</p>
+                <p className="text-lg font-semibold">
+                  {getUsageDisplay('follow_up_questions', stats?.featureUsage.follow_up_questions || 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Saved Items</h3>
+            <p className="mt-1 text-2xl font-semibold text-gray-900">
+              {stats?.savedIdeasCount}
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Questionnaire Responses</h3>
+            <p className="mt-1 text-2xl font-semibold text-gray-900">
+              {stats?.questionnaireResponses}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {stats?.subscriptionTier === 'free' && (
+        <div className="mt-6 pt-6 border-t">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Upgrade to Premium</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Get unlimited ideas and advanced features
+              </p>
+            </div>
+            <Button
+              onClick={() => window.location.href = '/pricing'}
+              className="bg-primary-600 hover:bg-primary-700 text-white"
+            >
+              Upgrade Now
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 ```
@@ -5534,6 +9258,141 @@ export function SubscriptionManager({ userId, onSubscriptionChange }: Subscripti
 
 ```
 
+# src/components/pricing-section.tsx
+
+```tsx
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Check, Infinity } from "lucide-react"
+import Link from "next/link"
+
+export default function PricingSection() {
+  return (
+    <section className="py-24 bg-gradient-to-b from-white to-gray-50/50">
+      <div className="container mx-auto px-4">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-4xl font-bold mb-4">Simple Pricing</h2>
+          <p className="text-muted-foreground text-xl">
+            Choose the perfect plan for your entrepreneurial journey
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {/* Free Plan */}
+          <Card className="relative p-6 flex flex-col border-2 hover:border-primary/50 transition-all duration-300">
+            <div className="mb-8">
+              <h3 className="text-2xl font-semibold mb-4">Free</h3>
+              <div className="flex items-baseline mb-2">
+                <span className="text-3xl font-bold">$0</span>
+                <span className="text-muted-foreground ml-2">Forever free</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-8 flex-grow">
+              {[
+                "1 AI-generated business idea",
+                "Basic market insights",
+                "Personality assessment",
+                "Skills matching"
+              ].map((feature) => (
+                <div key={feature} className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <span className="text-muted-foreground">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/signup">Start Free</Link>
+            </Button>
+          </Card>
+
+          {/* Pro Plan */}
+          <Card className="relative p-6 flex flex-col border-2 border-primary/20 hover:border-primary/50 transition-all duration-300 lg:scale-105 shadow-lg">
+            <Badge className="absolute -top-3 right-4">
+              Popular
+            </Badge>
+
+            <div className="mb-8">
+              <h3 className="text-2xl font-semibold mb-4">Pro</h3>
+              <div className="flex items-baseline mb-2">
+                <span className="text-3xl font-bold">$9.99</span>
+                <span className="text-muted-foreground ml-2">One-time payment</span>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-8 flex-grow">
+              {[
+                "10 AI-generated business ideas",
+                "Deep market analysis",
+                "Competitor insights",
+                "Revenue potential estimates",
+                "Step-by-step launch guide",
+                "Export to PDF"
+              ].map((feature) => (
+                <div key={feature} className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <span className="text-muted-foreground">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            <Button className="w-full" asChild>
+              <Link href="/signup">Get Started</Link>
+            </Button>
+          </Card>
+
+          {/* Premium Plan */}
+          <Card className="relative p-6 flex flex-col border-2 hover:border-primary/50 transition-all duration-300">
+            <Badge className="absolute -top-3 right-4 bg-gradient-to-r from-primary to-accent">
+              Best Value
+            </Badge>
+
+            <div className="mb-8">
+              <h3 className="text-2xl font-semibold mb-4">Premium</h3>
+              <div className="flex items-baseline mb-2">
+                <span className="text-3xl font-bold">$10</span>
+                <span className="text-muted-foreground ml-2">/month</span>
+              </div>
+              <span className="text-sm text-muted-foreground">Cancel anytime</span>
+            </div>
+
+            <div className="space-y-4 mb-8 flex-grow">
+              {[
+                { text: "Unlimited business ideas", icon: Infinity },
+                { text: "Monthly validation report", icon: Check },
+                { text: "In-depth market analysis", icon: Check },
+                { text: "Competitor tracking", icon: Check },
+                { text: "Revenue forecasting", icon: Check },
+                { text: "Custom launch roadmap", icon: Check },
+                { text: "Priority support", icon: Check }
+              ].map(({ text, icon: Icon }) => (
+                <div key={text} className="flex items-start gap-3">
+                  <Icon className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <span className={`text-muted-foreground ${text === "Unlimited business ideas" ? "font-medium" : ""}`}>
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <Button 
+              variant="outline" 
+              className="w-full border-primary hover:bg-primary hover:text-white transition-colors"
+              asChild
+            >
+              <Link href="/signup">Subscribe Now</Link>
+            </Button>
+          </Card>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+```
+
 # src/components/questionnaire/AIRecommendations.tsx
 
 ```tsx
@@ -5541,7 +9400,7 @@ export function SubscriptionManager({ userId, onSubscriptionChange }: Subscripti
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { aiService } from "@/lib/ai/service"
+import { Alert } from "@/components/ui/alert"
 import { SaveRecommendationButton } from "./SaveRecommendationButton"
 import { useIdeaGeneration, useSubscription } from "@/lib/hooks/useSubscription"
 import { SubscriptionManager } from "@/components/payment/SubscriptionManager"
@@ -5599,44 +9458,104 @@ export function AIRecommendations({ response, userId }: AIRecommendationsProps) 
   const [marketInsights, setMarketInsights] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<RecommendationType>('business_idea')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{
+    message: string;
+    code?: string;
+    retryAfter?: number;
+  } | null>(null)
+  const [streamingContent, setStreamingContent] = useState<string>('')
 
   const { generateIdea, canGenerateIdea, ideasRemaining } = useIdeaGeneration()
   const { isFeatureEnabled, subscription } = useSubscription()
 
-  const generateContent = async (type: RecommendationType) => {
+  const generateContent = async (type: RecommendationType, useStreaming: boolean = false) => {
     setLoading(true)
     setError(null)
+    setStreamingContent('')
 
     try {
-      switch (type) {
-        case 'business_idea':
-          if (!businessIdeas && canGenerateIdea) {
-            const ideas = await generateIdea(() => aiService.generateBusinessIdeas(response))
-            if (ideas) setBusinessIdeas(ideas)
+      if (useStreaming) {
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ stream: true }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.message || 'Failed to generate content')
+        }
+
+        const reader = response.body?.getReader()
+        if (!reader) throw new Error('Failed to initialize stream')
+
+        const decoder = new TextDecoder()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value)
+          setStreamingContent(prev => prev + chunk)
+        }
+
+        // Update the appropriate state based on type
+        switch (type) {
+          case 'business_idea':
+            setBusinessIdeas(streamingContent)
+            break
+          case 'follow_up':
+            setFollowUpQuestions(streamingContent)
+            break
+          case 'suggestion':
+            setSuggestions(streamingContent)
+            break
+          case 'insight':
+            setMarketInsights(streamingContent)
+            break
+        }
+      } else {
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ stream: false }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw {
+            message: error.message || 'Failed to generate content',
+            code: error.code,
+            retryAfter: error.retryAfter
           }
-          break
-        case 'follow_up':
-          if (!followUpQuestions && isFeatureEnabled('followUpQuestions')) {
-            const questions = await aiService.generateFollowUpQuestions(response)
-            if (questions) setFollowUpQuestions(questions)
-          }
-          break
-        case 'suggestion':
-          if (!suggestions && isFeatureEnabled('actionableSuggestions')) {
-            const suggs = await aiService.generateActionableSuggestions(response)
-            if (suggs) setSuggestions(suggs)
-          }
-          break
-        case 'insight':
-          if (!marketInsights && isFeatureEnabled('marketInsights')) {
-            const insights = await aiService.generateMarketInsights(response)
-            if (insights) setMarketInsights(insights)
-          }
-          break
+        }
+
+        const data = await response.json()
+        
+        switch (type) {
+          case 'business_idea':
+            setBusinessIdeas(data.data.businessIdeas)
+            break
+          case 'follow_up':
+            setFollowUpQuestions(data.data.followUpQuestions)
+            break
+          case 'suggestion':
+            setSuggestions(data.data.actionableSuggestions)
+            break
+          case 'insight':
+            setMarketInsights(data.data.marketInsights)
+            break
+        }
       }
-    } catch (err) {
-      setError("Failed to generate recommendations. Please try again.")
+    } catch (err: any) {
+      setError({
+        message: err.message || "Failed to generate recommendations",
+        code: err.code,
+        retryAfter: err.retryAfter
+      })
     } finally {
       setLoading(false)
     }
@@ -5647,6 +9566,8 @@ export function AIRecommendations({ response, userId }: AIRecommendationsProps) 
   }, [activeTab])
 
   const getActiveContent = () => {
+    if (streamingContent) return streamingContent
+    
     switch (activeTab) {
       case 'business_idea':
         return businessIdeas
@@ -5708,17 +9629,24 @@ export function AIRecommendations({ response, userId }: AIRecommendationsProps) 
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-500 p-4 rounded-lg">
-          {error}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => generateContent(activeTab)}
-            className="ml-4"
-          >
-            Retry
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="font-medium">{error.message}</p>
+              {error.code === 'RATE_LIMIT' && error.retryAfter && (
+                <p className="text-sm">Please try again in {error.retryAfter} seconds</p>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => generateContent(activeTab)}
+              className="ml-4"
+            >
+              Retry
+            </Button>
+          </div>
+        </Alert>
       )}
 
       <div className="bg-white p-6 rounded-lg shadow-sm min-h-[400px]">
@@ -5726,7 +9654,9 @@ export function AIRecommendations({ response, userId }: AIRecommendationsProps) 
           <div className="flex items-center justify-center h-[400px]">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Generating personalized recommendations...</p>
+              <p className="mt-4 text-gray-600">
+                {streamingContent ? 'Generating...' : 'Analyzing your profile...'}
+              </p>
             </div>
           </div>
         ) : isPremiumFeature(activeTab) ? (
@@ -5780,205 +9710,393 @@ export function AIRecommendations({ response, userId }: AIRecommendationsProps) 
 # src/components/questionnaire/QuestionCard.tsx
 
 ```tsx
-import { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
-import { validateFormData } from '@/lib/utils/form-validation';
-import { Alert } from '@/components/ui/alert';
+import { Alert } from '../ui/alert';
+import { Question, QuestionnaireProgress, questions } from '../../lib/questionnaire/questions';
+import { TypingIndicator } from './typing-indicator';
+import { SectionIndicator } from './section-indicator';
+import { flowManager } from '../../lib/questionnaire/flow-manager';
 
 export interface QuestionCardProps {
-  question: {
-    id: string;
-    text: string;
-    type: 'text' | 'choice' | 'multiple' | 'scale' | 'like-dislike' | 'yes-no';
-    options?: string[];
-    aiSuggestion?: string;
-    followUpQuestion?: string;
-    homework?: string;
-    section?: string;
-  };
-  onSubmit: (answer: any) => void;
-  onNext: () => void;
+  question: Question;
+  onSubmit: (answer: any, nextQuestionId: string | null) => void;
+  currentProgress: QuestionnaireProgress;
+  onModifyPrevious: () => void;
 }
 
-const answerSchema = z.object({
-  answer: z.union([
-    z.string().min(1, 'Answer is required'),
-    z.array(z.string()).min(1, 'At least one option must be selected'),
-    z.number().min(1).max(5),
-    z.boolean()
-  ])
-});
+const createAnswerSchema = (question: Question) => {
+  let baseSchema: any;
 
-type AnswerType = z.infer<typeof answerSchema>['answer'];
+  switch (question.type) {
+    case 'text':
+      baseSchema = z.string();
+      if (question.validation?.minLength) {
+        baseSchema = baseSchema.min(question.validation.minLength);
+      }
+      if (question.validation?.maxLength) {
+        baseSchema = baseSchema.max(question.validation.maxLength);
+      }
+      if (question.validation?.pattern) {
+        baseSchema = baseSchema.regex(new RegExp(question.validation.pattern));
+      }
+      break;
+    case 'choice':
+      baseSchema = z.string();
+      break;
+    case 'multiple':
+      baseSchema = z.array(z.string());
+      break;
+    case 'scale':
+      baseSchema = z.number().min(1).max(5);
+      break;
+    case 'yes-no':
+    case 'like-dislike':
+      baseSchema = z.boolean();
+      break;
+    default:
+      baseSchema = z.any();
+  }
 
-export default function QuestionCard({ question, onSubmit, onNext }: QuestionCardProps) {
+  if (question.validation?.required) {
+    baseSchema = baseSchema.refine((val: unknown) => {
+      if (Array.isArray(val)) return val.length > 0;
+      return val !== undefined && val !== null && val !== '';
+    }, 'This field is required');
+  }
+
+  return z.object({ answer: baseSchema });
+};
+
+export default function QuestionCard({ question, onSubmit, currentProgress, onModifyPrevious }: QuestionCardProps) {
   const [error, setError] = useState<string | null>(null);
-  const [answer, setAnswer] = useState<AnswerType>('');
-  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [answer, setAnswer] = useState<any>(() => {
+    return currentProgress.answers[question.id] || '';
+  });
+  const [isTyping, setIsTyping] = useState(false);
+  const [isModifying, setIsModifying] = useState(false);
+  const [showModifyTooltip, setShowModifyTooltip] = useState(false);
+  const [autoSaveIndicator, setAutoSaveIndicator] = useState<string | null>(null);
+  const [lastCheckpoint, setLastCheckpoint] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Auto-save functionality using FlowManager
+  const autoSave = useCallback(() => {
+    try {
+      const updatedProgress = {
+        ...currentProgress,
+        answers: {
+          ...currentProgress.answers,
+          [question.id]: answer
+        }
+      };
+
+      flowManager.autoSave(updatedProgress);
+      setAutoSaveIndicator('Progress auto-saved');
+      setTimeout(() => setAutoSaveIndicator(null), 2000);
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      setAutoSaveIndicator('Auto-save failed');
+    }
+  }, [currentProgress, question.id, answer]);
+
+  useEffect(() => {
+    const autoSaveTimer = setInterval(autoSave, flowManager.getAutoSaveInterval());
+    return () => clearInterval(autoSaveTimer);
+  }, [autoSave]);
+
+  useEffect(() => {
+    // Load saved answer for current question
+    const savedAnswer = currentProgress.answers[question.id];
+    if (savedAnswer) {
+      setAnswer(savedAnswer);
+      setIsModifying(true);
+    } else {
+      setAnswer(''); // Reset answer when moving to a new question
+      setIsModifying(false);
+    }
+
+    // Enhanced typing indicator
+    setIsTyping(true);
+    const timer = setTimeout(() => setIsTyping(false), 800);
+
+    // Load last checkpoint
+    const checkpoint = flowManager.getLastCheckpoint();
+    setLastCheckpoint(checkpoint?.questionId || null);
+
+    return () => clearTimeout(timer);
+  }, [question.id, currentProgress]);
+
+  const validateAnswer = (answer: any) => {
+    const schema = createAnswerSchema(question);
+    const result = schema.safeParse({ answer });
+    
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      throw new Error(firstError.message);
+    }
+    
+    return result.data.answer;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const result = validateFormData(answerSchema, { answer });
-
-    if (!result.success) {
-      const firstError = Object.values(result.errors)[0];
-      setError(firstError ? firstError[0] : 'Invalid answer');
-      return;
-    }
-
     try {
-      onSubmit(result.data.answer);
-      if (question.followUpQuestion && !showFollowUp) {
-        setShowFollowUp(true);
-      } else {
-        onNext();
+      const validatedAnswer = validateAnswer(answer);
+      
+      // Use FlowManager to determine next question
+      const nextQuestionId = flowManager.getNextQuestion(question.id, {
+        ...currentProgress.answers,
+        [question.id]: validatedAnswer
+      });
+
+      // Save progress before submitting
+      await autoSave();
+      
+      // Create checkpoint if needed
+      if (question.checkpoint) {
+        flowManager.createCheckpoint({
+          ...currentProgress,
+          currentQuestionId: question.id,
+          answers: {
+            ...currentProgress.answers,
+            [question.id]: validatedAnswer
+          }
+        });
       }
+      
+      onSubmit(validatedAnswer, nextQuestionId);
     } catch (err) {
-      setError('Failed to submit answer. Please try again.');
+      setError(err instanceof Error ? err.message : 'Invalid answer');
+    }
+  };
+
+  const handleRestoreCheckpoint = () => {
+    if (lastCheckpoint) {
+      const restoredProgress = flowManager.restoreCheckpoint(lastCheckpoint);
+      if (restoredProgress) {
+        // Update the form with restored data
+        setAnswer(restoredProgress.answers[question.id] || '');
+        setIsModifying(true);
+      }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-white rounded-xl shadow-lg max-w-2xl mx-auto">
-      {question.section && (
-        <div className="text-sm font-medium text-blue-600 uppercase tracking-wide">
-          {question.section}
+    <div className="space-y-6">
+      {/* Section Indicator */}
+      <SectionIndicator
+        currentSection={question.section}
+        progress={flowManager.calculateProgress(currentProgress.answers)}
+        isActive={true}
+      />
+
+      {/* Auto-save Indicator */}
+      {autoSaveIndicator && (
+        <div className="fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg transition-opacity duration-300">
+          {autoSaveIndicator}
         </div>
       )}
 
-      <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-900">{question.text}</h3>
-        
-        {question.aiSuggestion && (
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <span className="font-medium">AI Suggestion:</span> {question.aiSuggestion}
-            </p>
-          </div>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-white rounded-xl shadow-lg max-w-2xl mx-auto">
+        <div className="space-y-4">
+          {/* Typing Indicator */}
+          <TypingIndicator 
+            isTyping={isTyping} 
+            message={isModifying ? "Retrieving previous answer..." : "Thinking..."}
+          />
 
-        {error && (
-          <Alert variant="destructive">
-            <p className="text-sm">{error}</p>
-          </Alert>
-        )}
-
-        <div className="mt-4">
-          {question.type === 'text' && (
-            <textarea
-              value={answer as string}
-              onChange={(e) => setAnswer(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-              placeholder="Share your thoughts..."
-            />
+          {!isTyping && (
+            <h3 className="text-xl font-semibold text-gray-900">{question.text}</h3>
           )}
 
-          {question.type === 'yes-no' && (
-            <div className="flex space-x-4">
-              {['Yes', 'No'].map((option) => (
+          {error && (
+            <Alert variant="destructive">
+              <p className="text-sm">{error}</p>
+            </Alert>
+          )}
+
+          {/* Checkpoint Indicator */}
+          {question.checkpoint && (
+            <div className="flex items-center justify-between text-sm bg-green-50 p-3 rounded-md">
+              <div className="flex items-center space-x-2 text-green-600">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Checkpoint question - progress will be saved</span>
+              </div>
+              {lastCheckpoint && (
                 <button
-                  key={option}
                   type="button"
-                  onClick={() => setAnswer(option === 'Yes')}
-                  className={`flex-1 py-3 px-6 rounded-lg border-2 transition-all ${
-                    answer === (option === 'Yes')
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-blue-200'
-                  }`}
+                  onClick={handleRestoreCheckpoint}
+                  className="text-blue-600 hover:text-blue-700 focus:outline-none"
                 >
-                  {option}
+                  Restore Last Checkpoint
                 </button>
-              ))}
+              )}
             </div>
           )}
 
-          {question.type === 'like-dislike' && (
-            <div className="flex space-x-4">
-              {['Like', 'Dislike'].map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setAnswer(option)}
-                  className={`flex-1 py-3 px-6 rounded-lg border-2 transition-all ${
-                    answer === option
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-blue-200'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Question Input Section */}
+          <div className="mt-4">
+            {question.type === 'text' && (
+              <textarea
+                value={answer as string}
+                onChange={(e) => setAnswer(e.target.value)}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                placeholder="Share your thoughts..."
+              />
+            )}
 
-          {question.type === 'scale' && (
-            <div className="flex justify-between space-x-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setAnswer(value)}
-                  className={`w-12 h-12 rounded-full border-2 transition-all ${
-                    answer === value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-blue-200'
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          )}
+            {question.type === 'yes-no' && (
+              <div className="flex space-x-4">
+                {['Yes', 'No'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setAnswer(option === 'Yes')}
+                    className={`flex-1 py-3 px-6 rounded-lg border-2 transition-all ${
+                      answer === (option === 'Yes')
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-blue-200'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
 
-          {question.type === 'multiple' && question.options && (
-            <div className="space-y-3">
-              {question.options.map((option) => (
-                <label key={option} className="flex items-center space-x-3 p-3 rounded-lg border-2 hover:border-blue-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    value={option}
-                    checked={Array.isArray(answer) && answer.includes(option)}
-                    onChange={(e) => {
-                      const newAnswer = Array.isArray(answer) ? [...answer] : [];
-                      if (e.target.checked) {
-                        newAnswer.push(option);
-                      } else {
-                        const index = newAnswer.indexOf(option);
-                        if (index > -1) {
-                          newAnswer.splice(index, 1);
+            {question.type === 'like-dislike' && (
+              <div className="flex space-x-4">
+                {['Like', 'Dislike'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setAnswer(option === 'Like')}
+                    className={`flex-1 py-3 px-6 rounded-lg border-2 transition-all ${
+                      answer === (option === 'Like')
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-blue-200'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {question.type === 'scale' && (
+              <div className="flex justify-between space-x-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setAnswer(value)}
+                    className={`w-12 h-12 rounded-full border-2 transition-all ${
+                      answer === value
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-blue-200'
+                    }`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {question.type === 'choice' && question.options && (
+              <div className="space-y-3">
+                {question.options.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setAnswer(option)}
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                      answer === option
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-blue-200'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {question.type === 'multiple' && question.options && (
+              <div className="space-y-3">
+                {question.options.map((option) => (
+                  <label
+                    key={option}
+                    className="flex items-center space-x-3 p-3 rounded-lg border-2 hover:border-blue-200 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      value={option}
+                      checked={Array.isArray(answer) && answer.includes(option)}
+                      onChange={(e) => {
+                        const newAnswer = Array.isArray(answer) ? [...answer] : [];
+                        if (e.target.checked) {
+                          newAnswer.push(option);
+                        } else {
+                          const index = newAnswer.indexOf(option);
+                          if (index > -1) {
+                            newAnswer.splice(index, 1);
+                          }
                         }
-                      }
-                      setAnswer(newAnswer);
-                    }}
-                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">{option}</span>
-                </label>
-              ))}
-            </div>
-          )}
+                        setAnswer(newAnswer);
+                      }}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700">{option}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {question.homework && (
-          <div className="mt-4 bg-yellow-50 p-4 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              <span className="font-medium">Homework:</span> {question.homework}
-            </p>
+        {/* Navigation and Progress Section */}
+        <div className="flex justify-between items-center pt-6 border-t border-gray-100">
+          <div className="flex items-center space-x-4">
+            <div 
+              className="relative"
+              onMouseEnter={() => setShowModifyTooltip(true)}
+              onMouseLeave={() => setShowModifyTooltip(false)}
+            >
+              <button
+                type="button"
+                onClick={onModifyPrevious}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 focus:outline-none"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Modify Previous</span>
+              </button>
+              {showModifyTooltip && (
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-nowrap">
+                  Click to modify previous answers
+                </div>
+              )}
+            </div>
+            <div className="text-sm text-gray-500">
+              Question {Object.keys(currentProgress.answers).length + 1} of {questions.filter(q => !q.skipIf || !q.skipIf(currentProgress.answers)).length}
+            </div>
           </div>
-        )}
-      </div>
-
-      <div className="flex justify-end space-x-4">
-        <button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-        >
-          {showFollowUp ? 'Continue' : 'Next Question'}
-        </button>
-      </div>
-    </form>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            {isModifying ? 'Update Answer' : 'Next Question'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
@@ -6049,6 +10167,85 @@ export function SaveRecommendationButton({
 
 ```
 
+# src/components/questionnaire/section-indicator.tsx
+
+```tsx
+'use client';
+
+import React from 'react';
+
+interface SectionIndicatorProps {
+  currentSection: string;
+  progress: number;
+  isActive: boolean;
+}
+
+export const SectionIndicator: React.FC<SectionIndicatorProps> = ({
+  currentSection,
+  progress,
+  isActive
+}) => {
+  return (
+    <div className={`bg-white rounded-lg shadow-sm p-4 mb-6 transition-all duration-300 ${
+      isActive ? 'border-l-4 border-blue-500' : ''
+    }`}>
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${
+            isActive ? 'bg-blue-500' : 'bg-gray-300'
+          }`}></div>
+          <h2 className="text-lg font-semibold text-gray-800">{currentSection}</h2>
+        </div>
+        <div className="text-sm font-medium text-gray-600">
+          {progress}% Complete
+        </div>
+      </div>
+      <div className="w-full bg-gray-100 rounded-full h-1.5">
+        <div
+          className="bg-blue-500 h-1.5 rounded-full transition-all duration-500 ease-in-out"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+```
+
+# src/components/questionnaire/typing-indicator.tsx
+
+```tsx
+'use client';
+
+import React from 'react';
+
+interface TypingIndicatorProps {
+  isTyping: boolean;
+  message?: string;
+}
+
+export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ 
+  isTyping, 
+  message = 'Thinking...' 
+}) => {
+  if (!isTyping) return null;
+
+  return (
+    <div className="flex items-center space-x-2 h-8 mb-4">
+      <div className="flex space-x-1">
+        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" 
+          style={{ animationDelay: '0.2s' }}></div>
+        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" 
+          style={{ animationDelay: '0.4s' }}></div>
+      </div>
+      <span className="text-sm text-gray-500">{message}</span>
+    </div>
+  );
+};
+
+```
+
 # src/components/ui/alert.tsx
 
 ```tsx
@@ -6085,6 +10282,54 @@ export function Alert({
   )
 }
 
+export function AlertDescription({ children, className, ...props }: { children: ReactNode, className?: string }) {
+  return (
+    <div className={cn("text-sm", className)} {...props}>
+      {children}
+    </div>
+  )
+}
+```
+
+# src/components/ui/badge.tsx
+
+```tsx
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+
+export { Badge, badgeVariants }
+
 ```
 
 # src/components/ui/button.tsx
@@ -6096,27 +10341,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary-600",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline:
-          "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        outline: "border border-input hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        gradient: "gradient-bg text-white shadow hover:opacity-90",
+        link: "underline-offset-4 hover:underline text-primary",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "h-10 py-2 px-4",
+        sm: "h-9 px-3 rounded-md",
+        lg: "h-11 px-8 rounded-md",
       },
     },
     defaultVariants: {
@@ -6150,6 +10388,31 @@ export { Button, buttonVariants }
 
 ```
 
+# src/components/ui/card.tsx
+
+```tsx
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+export { Card }
+
+```
+
 # src/components/ui/input.tsx
 
 ```tsx
@@ -6180,6 +10443,207 @@ export { Input }
 
 ```
 
+# src/components/ui/premium-feature-indicator.tsx
+
+```tsx
+'use client';
+
+import React from 'react';
+import { useSubscription } from '@/lib/hooks/useSubscription';
+import { SUBSCRIPTION_TIERS, USAGE_LIMITS, SubscriptionTier } from '@/lib/stripe/config';
+
+type UsageMetric = keyof typeof USAGE_LIMITS[keyof typeof USAGE_LIMITS];
+
+interface PremiumFeatureIndicatorProps {
+  feature: UsageMetric;
+  currentUsage: number;
+  userId: string;
+  className?: string;
+  showUpgradeButton?: boolean;
+}
+
+export function PremiumFeatureIndicator({
+  feature,
+  currentUsage,
+  userId,
+  className = '',
+  showUpgradeButton = true
+}: PremiumFeatureIndicatorProps) {
+  const { subscription, isLoading } = useSubscription(userId);
+  const tier = subscription?.tier || SUBSCRIPTION_TIERS.basic;
+  const limit = USAGE_LIMITS[tier][feature];
+  const isUnlimited = limit === -1;
+  const usagePercentage = isUnlimited ? 0 : (currentUsage / limit) * 100;
+  const isNearLimit = usagePercentage >= 80;
+  const isAtLimit = usagePercentage >= 100;
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-full"></div>
+      </div>
+    );
+  }
+
+  const getStatusColor = () => {
+    if (isUnlimited) return 'bg-green-100 text-green-800';
+    if (isAtLimit) return 'bg-red-100 text-red-800';
+    if (isNearLimit) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-blue-100 text-blue-800';
+  };
+
+  const formatFeatureName = (feature: string) => {
+    return feature
+      .replace(/([A-Z])/g, ' $1')
+      .toLowerCase()
+      .replace(/^\w/, c => c.toUpperCase());
+  };
+
+  return (
+    <div className={`rounded-lg p-4 ${className}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-gray-700">
+          {formatFeatureName(feature)}
+        </span>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor()}`}>
+          {isUnlimited ? 'Unlimited' : `${currentUsage}/${limit}`}
+        </span>
+      </div>
+
+      {!isUnlimited && (
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all duration-300 ${
+              isAtLimit ? 'bg-red-500' : isNearLimit ? 'bg-yellow-500' : 'bg-blue-500'
+            }`}
+            style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+          ></div>
+        </div>
+      )}
+
+      {(isNearLimit || isAtLimit) && showUpgradeButton && tier !== SUBSCRIPTION_TIERS.enterprise && (
+        <div className="mt-3">
+          {isAtLimit ? (
+            <div className="text-red-800 text-sm mb-2">
+              You've reached your {formatFeatureName(feature)} limit
+            </div>
+          ) : (
+            <div className="text-yellow-800 text-sm mb-2">
+              You're approaching your {formatFeatureName(feature)} limit
+            </div>
+          )}
+          <a
+            href="/pricing"
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Upgrade Now
+            <svg
+              className="ml-1.5 -mr-0.5 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </a>
+        </div>
+      )}
+
+      {tier === SUBSCRIPTION_TIERS.enterprise && (
+        <div className="mt-2 text-sm text-gray-600">
+          Enterprise plan includes unlimited {formatFeatureName(feature).toLowerCase()}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface PremiumFeatureBadgeProps {
+  tier: SubscriptionTier;
+  className?: string;
+}
+
+export function PremiumFeatureBadge({ tier, className = '' }: PremiumFeatureBadgeProps) {
+  const getBadgeStyle = () => {
+    switch (tier) {
+      case SUBSCRIPTION_TIERS.enterprise:
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case SUBSCRIPTION_TIERS.pro:
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getBadgeStyle()} ${className}`}>
+      {tier === SUBSCRIPTION_TIERS.enterprise && (
+        <svg className="mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
+          <circle cx="4" cy="4" r="3" />
+        </svg>
+      )}
+      {tier.charAt(0).toUpperCase() + tier.slice(1)}
+    </span>
+  );
+}
+
+interface UpgradePromptProps {
+  feature: string;
+  targetTier: SubscriptionTier;
+  className?: string;
+}
+
+export function UpgradePrompt({ feature, targetTier, className = '' }: UpgradePromptProps) {
+  return (
+    <div className={`rounded-lg border border-yellow-200 bg-yellow-50 p-4 ${className}`}>
+      <div className="flex">
+        <div className="flex-shrink-0">
+          <svg
+            className="h-5 w-5 text-yellow-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <div className="ml-3">
+          <h3 className="text-sm font-medium text-yellow-800">
+            Upgrade to access {feature}
+          </h3>
+          <div className="mt-2 text-sm text-yellow-700">
+            <p>
+              This feature is available in the {targetTier.charAt(0).toUpperCase() + targetTier.slice(1)} plan and above.
+            </p>
+          </div>
+          <div className="mt-4">
+            <div className="-mx-2 -my-1.5 flex">
+              <a
+                href="/pricing"
+                className="px-3 py-1.5 bg-yellow-800 text-white text-sm font-medium rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-600"
+              >
+                View Plans
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
 # src/lib/ai/config.ts
 
 ```ts
@@ -6205,261 +10669,527 @@ export type ModelType = typeof MODELS[keyof typeof MODELS]
 # src/lib/ai/service.ts
 
 ```ts
-import { openai, MODELS } from './config'
-import { cache, rateLimiter } from '../utils/cache'
-import { responseTemplates, parseAIResponse } from './templates'
-import { Database } from '@/types/database'
-import { BusinessIdea, FollowUpQuestion, ActionableSuggestions, MarketInsights } from './types'
+import { openai, MODELS } from './config';
+import { redisCache } from '../utils/redis-cache';
+import { rateLimiter, RateLimitError } from '../utils/rate-limiter';
+import { responseTemplates, systemPrompts, parseAIResponse, formatResponse } from './templates';
+import { logger } from '../monitoring';
+import type { Database } from '../../types/database';
+import { 
+  BusinessIdea, 
+  FollowUpQuestion, 
+  ActionableSuggestions, 
+  MarketInsights,
+  ValidationResult,
+  validateBusinessIdeaArray,
+  validateFollowUpQuestionArray,
+  validateActionableSuggestions,
+  validateMarketInsights,
+  GenerationMetadata,
+  ResponseQuality
+} from './types';
 
-type QuestionnaireResponse = Database['public']['Tables']['questionnaire_responses']['Row']
+type QuestionnaireResponse = Database['public']['Tables']['questionnaire_responses']['Row'];
 
-class AIServiceError extends Error {
+interface RetryConfig {
+  maxRetries: number;
+  initialDelay: number;
+  maxDelay: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  initialDelay: 1000,
+  maxDelay: 10000,
+};
+
+const CACHE_TTL = {
+  SHORT: 300, // 5 minutes
+  MEDIUM: 3600, // 1 hour
+  LONG: 86400, // 24 hours
+};
+
+const QUALITY_THRESHOLDS = {
+  MIN_OVERALL: 0.7,
+  MIN_SPECIFICITY: 0.6,
+  MIN_ACTIONABILITY: 0.6,
+};
+
+export class AIServiceError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly retryAfter?: number
+    public readonly retryAfter?: number,
+    public readonly originalError?: any
   ) {
-    super(message)
-    this.name = 'AIServiceError'
+    super(message);
+    this.name = 'AIServiceError';
   }
 }
 
-export const aiService = {
-  async generateBusinessIdeas(response: QuestionnaireResponse) {
-    const cacheKey = `ideas:${JSON.stringify(response)}`
-    const cachedResult = cache.get(cacheKey)
-    if (cachedResult) return cachedResult
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  config: RetryConfig = DEFAULT_RETRY_CONFIG
+): Promise<T> {
+  let lastError: Error | null = null;
+  let delay = config.initialDelay;
 
-    await rateLimiter.waitForToken()
+  for (let attempt = 1; attempt <= config.maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      logger.warn(`Retry attempt ${attempt} failed:`, error);
+
+      if (
+        error instanceof RateLimitError ||
+        error.code === 'INVALID_REQUEST' ||
+        error.code === 'AUTH_ERROR'
+      ) {
+        throw error;
+      }
+
+      if (attempt === config.maxRetries) {
+        break;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay = Math.min(delay * 2, config.maxDelay);
+    }
+  }
+
+  throw lastError || new Error('Operation failed after retries');
+}
+
+const handleAIError = (error: any) => {
+  logger.error('AI Service error:', error);
+
+  if (error instanceof RateLimitError) {
+    throw new AIServiceError(
+      'Rate limit exceeded. Please try again later.',
+      'RATE_LIMIT',
+      error.retryAfter,
+      error
+    );
+  }
+
+  if (error.response?.status === 429) {
+    throw new AIServiceError(
+      'Rate limit exceeded. Please try again later.',
+      'RATE_LIMIT',
+      error.response.headers['retry-after'],
+      error
+    );
+  }
+
+  if (error.response?.status === 400) {
+    throw new AIServiceError(
+      'Invalid request to AI service.',
+      'INVALID_REQUEST',
+      undefined,
+      error
+    );
+  }
+
+  if (error.response?.status === 401) {
+    throw new AIServiceError(
+      'Authentication error with AI service.',
+      'AUTH_ERROR',
+      undefined,
+      error
+    );
+  }
+
+  if (error.response?.status === 500) {
+    throw new AIServiceError(
+      'AI service is currently unavailable.',
+      'SERVICE_ERROR',
+      undefined,
+      error
+    );
+  }
+
+  if (error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET') {
+    throw new AIServiceError(
+      'Failed to connect to AI service.',
+      'CONNECTION_ERROR',
+      undefined,
+      error
+    );
+  }
+
+  throw new AIServiceError(
+    'Unexpected error occurred.',
+    'UNKNOWN_ERROR',
+    undefined,
+    error
+  );
+};
+
+const generateCacheKey = (type: string, response: QuestionnaireResponse): string => {
+  const { user_id, experience, interests, commitment, resources } = response;
+  return `${type}:${user_id}:${JSON.stringify({ experience, interests, commitment, resources })}`;
+};
+
+const validateAndCacheResponse = async <T>(
+  response: T,
+  validator: (data: any) => ValidationResult<T>,
+  cacheKey: string,
+  ttl: number,
+  metadata: GenerationMetadata
+): Promise<T & { metadata: GenerationMetadata }> => {
+  const validation = validator(response);
+  if (!validation.isValid) {
+    logger.error('Response validation failed:', validation.errors);
+    throw new AIServiceError(
+      'Generated response failed validation',
+      'VALIDATION_ERROR',
+      undefined,
+      validation.errors
+    );
+  }
+
+  if (validation.quality) {
+    metadata.quality = validation.quality;
+  }
+
+  const responseWithMetadata = { ...response, metadata };
+  await redisCache.set(cacheKey, JSON.stringify(responseWithMetadata), ttl);
+  return responseWithMetadata;
+};
+
+const createGenerationMetadata = (
+  model: string,
+  temperature: number,
+  startTime: number,
+  completion: any
+): GenerationMetadata => ({
+  timestamp: Date.now(),
+  model,
+  temperature,
+  quality: {
+    completeness: 0,
+    relevance: 0,
+    specificity: 0,
+    actionability: 0,
+    overall: 0
+  },
+  generationTime: Date.now() - startTime,
+  promptTokens: completion.usage?.prompt_tokens || 0,
+  completionTokens: completion.usage?.completion_tokens || 0,
+  totalTokens: completion.usage?.total_tokens || 0
+});
+
+export const aiService = {
+  async generateBusinessIdeas(response: QuestionnaireResponse, signal?: AbortSignal) {
+    const userId = response.user_id;
+    await rateLimiter.consume(userId);
+
+    const cacheKey = generateCacheKey('ideas', response);
+    const cachedResult = await redisCache.get(cacheKey);
+    if (cachedResult) {
+      try {
+        const parsed = JSON.parse(cachedResult);
+        if (parsed.metadata) return parsed;
+      } catch (error) {
+        logger.warn('Cache parsing failed:', error);
+      }
+    }
 
     try {
-      const prompt = `As a startup advisor, generate 3 detailed and personalized business ideas based on the following information:
+      const result = await withRetry(async () => {
+        const startTime = Date.now();
+        const prompt = `As a startup advisor, generate 3 detailed and personalized business ideas based on the following information:
 - Professional Background: ${response.experience}
 - Business Interests: ${response.interests}
 - Time Commitment: ${response.commitment}
 - Available Resources: ${response.resources}
 
-For each idea, provide:
-1. Business Name
-2. Description
-3. Target Market
-4. Required Skills
-5. Initial Investment Range
-6. Potential Challenges
-7. First Steps to Get Started
-
 Format each idea exactly like this template:
-${responseTemplates.businessIdea}`
+${responseTemplates.businessIdea}`;
 
-      const completion = await openai.chat.completions.create({
-        model: MODELS.GPT4,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      })
+        const completion = await openai.chat.completions.create({
+          model: MODELS.GPT4,
+          messages: [
+            { role: 'system', content: systemPrompts.businessIdea },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          stream: false,
+        }, { signal });
 
-      const content = completion.choices[0].message.content
-      if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE')
+        const content = completion.choices[0].message.content;
+        if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE');
 
-      const parsedIdeas = parseAIResponse(content, 'ideas') as BusinessIdea[]
-      const formattedResponse = parsedIdeas.map(idea => 
-        responseTemplates.businessIdea
-          .replace('{name}', idea.name)
-          .replace('{description}', idea.description)
-          .replace('{targetMarket}', idea.targetMarket)
-          .replace('{skills}', idea.skills)
-          .replace('{investment}', idea.investment)
-          .replace('{challenges}', idea.challenges)
-          .replace('{steps}', idea.steps)
-      ).join('\n\n')
+        const metadata = createGenerationMetadata(MODELS.GPT4, 0.7, startTime, completion);
+        const parsedIdeas = parseAIResponse(content, 'ideas') as BusinessIdea[];
+        
+        return validateAndCacheResponse(
+          parsedIdeas,
+          validateBusinessIdeaArray,
+          cacheKey,
+          CACHE_TTL.MEDIUM,
+          metadata
+        );
+      });
 
-      cache.set(cacheKey, formattedResponse)
-      return formattedResponse
-
+      return result;
     } catch (error: any) {
-      if (error.name === 'AIServiceError') throw error
-
-      if (error.response?.status === 429) {
-        throw new AIServiceError(
-          'Rate limit exceeded. Please try again later.',
-          'RATE_LIMIT',
-          error.response.headers['retry-after']
-        )
-      }
-
-      throw new AIServiceError(
-        'Failed to generate business ideas',
-        'GENERATION_ERROR'
-      )
+      if (error.name === 'AIServiceError') throw error;
+      handleAIError(error);
     }
   },
 
-  async generateFollowUpQuestions(response: QuestionnaireResponse) {
-    const cacheKey = `questions:${JSON.stringify(response)}`
-    const cachedResult = cache.get(cacheKey)
-    if (cachedResult) return cachedResult
+  async generateFollowUpQuestions(response: QuestionnaireResponse, signal?: AbortSignal) {
+    const userId = response.user_id;
+    await rateLimiter.consume(userId);
 
-    await rateLimiter.waitForToken()
+    const cacheKey = generateCacheKey('questions', response);
+    const cachedResult = await redisCache.get(cacheKey);
+    if (cachedResult) {
+      try {
+        const parsed = JSON.parse(cachedResult);
+        if (parsed.metadata) return parsed;
+      } catch (error) {
+        logger.warn('Cache parsing failed:', error);
+      }
+    }
 
     try {
-      const prompt = `Based on the following questionnaire responses, generate 5 specific follow-up questions to help better understand the user's business potential:
+      const result = await withRetry(async () => {
+        const startTime = Date.now();
+        const prompt = `Based on the following questionnaire responses, generate 5 specific follow-up questions:
 - Professional Background: ${response.experience}
 - Business Interests: ${response.interests}
 - Time Commitment: ${response.commitment}
 - Available Resources: ${response.resources}
 
 Format each question exactly like this template:
-${responseTemplates.followUpQuestions}`
+${responseTemplates.followUpQuestion}`;
 
-      const completion = await openai.chat.completions.create({
-        model: MODELS.GPT4,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      })
+        const completion = await openai.chat.completions.create({
+          model: MODELS.GPT4,
+          messages: [
+            { role: 'system', content: systemPrompts.followUpQuestion },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          stream: false,
+        }, { signal });
 
-      const content = completion.choices[0].message.content
-      if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE')
+        const content = completion.choices[0].message.content;
+        if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE');
 
-      const parsedQuestions = parseAIResponse(content, 'questions') as FollowUpQuestion[]
-      const formattedResponse = parsedQuestions.map((q, i) => 
-        responseTemplates.followUpQuestions
-          .replace('{number}', (i + 1).toString())
-          .replace('{question}', q.question)
-          .replace('{importance}', q.importance)
-      ).join('\n\n')
+        const metadata = createGenerationMetadata(MODELS.GPT4, 0.7, startTime, completion);
+        const parsedQuestions = parseAIResponse(content, 'questions') as FollowUpQuestion[];
+        
+        return validateAndCacheResponse(
+          parsedQuestions,
+          validateFollowUpQuestionArray,
+          cacheKey,
+          CACHE_TTL.SHORT,
+          metadata
+        );
+      });
 
-      cache.set(cacheKey, formattedResponse)
-      return formattedResponse
-
+      return result;
     } catch (error: any) {
-      if (error.name === 'AIServiceError') throw error
-
-      if (error.response?.status === 429) {
-        throw new AIServiceError(
-          'Rate limit exceeded. Please try again later.',
-          'RATE_LIMIT',
-          error.response.headers['retry-after']
-        )
-      }
-
-      throw new AIServiceError(
-        'Failed to generate follow-up questions',
-        'GENERATION_ERROR'
-      )
+      if (error.name === 'AIServiceError') throw error;
+      handleAIError(error);
     }
   },
 
-  async generateActionableSuggestions(response: QuestionnaireResponse) {
-    const cacheKey = `suggestions:${JSON.stringify(response)}`
-    const cachedResult = cache.get(cacheKey)
-    if (cachedResult) return cachedResult
+  async generateActionableSuggestions(response: QuestionnaireResponse, signal?: AbortSignal) {
+    const userId = response.user_id;
+    await rateLimiter.consume(userId);
 
-    await rateLimiter.waitForToken()
+    const cacheKey = generateCacheKey('suggestions', response);
+    const cachedResult = await redisCache.get(cacheKey);
+    if (cachedResult) {
+      try {
+        const parsed = JSON.parse(cachedResult);
+        if (parsed.metadata) return parsed;
+      } catch (error) {
+        logger.warn('Cache parsing failed:', error);
+      }
+    }
 
     try {
-      const prompt = `Based on the following profile, provide detailed, actionable suggestions for starting a business:
+      const result = await withRetry(async () => {
+        const startTime = Date.now();
+        const prompt = `Based on the following profile, provide detailed, actionable suggestions:
 - Professional Background: ${response.experience}
 - Business Interests: ${response.interests}
 - Time Commitment: ${response.commitment}
 - Available Resources: ${response.resources}
 
 Format the response exactly like this template:
-${responseTemplates.actionableSuggestions}`
+${responseTemplates.actionableSuggestions}`;
 
-      const completion = await openai.chat.completions.create({
-        model: MODELS.GPT4,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      })
+        const completion = await openai.chat.completions.create({
+          model: MODELS.GPT4,
+          messages: [
+            { role: 'system', content: systemPrompts.actionableSuggestions },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          stream: false,
+        }, { signal });
 
-      const content = completion.choices[0].message.content
-      if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE')
+        const content = completion.choices[0].message.content;
+        if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE');
 
-      const parsedSuggestions = parseAIResponse(content, 'suggestions') as ActionableSuggestions
-      const formattedResponse = responseTemplates.actionableSuggestions
-        .replace('{immediateSteps}', parsedSuggestions.immediate_next_steps)
-        .replace('{skillDevelopment}', parsedSuggestions.skill_development)
-        .replace('{networking}', parsedSuggestions.networking_strategy)
-        .replace('{resources}', parsedSuggestions.resource_allocation)
-        .replace('{pitfalls}', parsedSuggestions.potential_pitfalls)
-        .replace('{timeline}', parsedSuggestions.implementation_timeline)
+        const metadata = createGenerationMetadata(MODELS.GPT4, 0.7, startTime, completion);
+        const parsedSuggestions = parseAIResponse(content, 'suggestions') as ActionableSuggestions;
+        
+        return validateAndCacheResponse(
+          parsedSuggestions,
+          validateActionableSuggestions,
+          cacheKey,
+          CACHE_TTL.MEDIUM,
+          metadata
+        );
+      });
 
-      cache.set(cacheKey, formattedResponse)
-      return formattedResponse
-
+      return result;
     } catch (error: any) {
-      if (error.name === 'AIServiceError') throw error
-
-      if (error.response?.status === 429) {
-        throw new AIServiceError(
-          'Rate limit exceeded. Please try again later.',
-          'RATE_LIMIT',
-          error.response.headers['retry-after']
-        )
-      }
-
-      throw new AIServiceError(
-        'Failed to generate actionable suggestions',
-        'GENERATION_ERROR'
-      )
+      if (error.name === 'AIServiceError') throw error;
+      handleAIError(error);
     }
   },
 
-  async generateMarketInsights(response: QuestionnaireResponse) {
-    const cacheKey = `insights:${JSON.stringify(response)}`
-    const cachedResult = cache.get(cacheKey)
-    if (cachedResult) return cachedResult
+  async generateMarketInsights(response: QuestionnaireResponse, signal?: AbortSignal) {
+    const userId = response.user_id;
+    await rateLimiter.consume(userId);
 
-    await rateLimiter.waitForToken()
+    const cacheKey = generateCacheKey('insights', response);
+    const cachedResult = await redisCache.get(cacheKey);
+    if (cachedResult) {
+      try {
+        const parsed = JSON.parse(cachedResult);
+        if (parsed.metadata) return parsed;
+      } catch (error) {
+        logger.warn('Cache parsing failed:', error);
+      }
+    }
 
     try {
-      const prompt = `Analyze market opportunities based on this profile:
+      const result = await withRetry(async () => {
+        const startTime = Date.now();
+        const prompt = `Analyze market opportunities based on this profile:
 - Professional Background: ${response.experience}
 - Business Interests: ${response.interests}
 - Time Commitment: ${response.commitment}
 - Available Resources: ${response.resources}
 
 Format the response exactly like this template:
-${responseTemplates.marketInsights}`
+${responseTemplates.marketInsights}`;
 
-      const completion = await openai.chat.completions.create({
-        model: MODELS.GPT4,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      })
+        const completion = await openai.chat.completions.create({
+          model: MODELS.GPT4,
+          messages: [
+            { role: 'system', content: systemPrompts.marketInsights },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          stream: false,
+        }, { signal });
 
-      const content = completion.choices[0].message.content
-      if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE')
+        const content = completion.choices[0].message.content;
+        if (!content) throw new AIServiceError('Empty response from AI', 'EMPTY_RESPONSE');
 
-      const parsedInsights = parseAIResponse(content, 'insights') as MarketInsights
-      const formattedResponse = responseTemplates.marketInsights
-        .replace('{trends}', parsedInsights.current_trends)
-        .replace('{gaps}', parsedInsights.market_gaps)
-        .replace('{competition}', parsedInsights.competitive_landscape)
-        .replace('{customers}', parsedInsights.target_customers)
-        .replace('{revenue}', parsedInsights.revenue_potential)
-        .replace('{strategy}', parsedInsights.entry_strategy)
+        const metadata = createGenerationMetadata(MODELS.GPT4, 0.7, startTime, completion);
+        const parsedInsights = parseAIResponse(content, 'insights') as MarketInsights;
+        
+        return validateAndCacheResponse(
+          parsedInsights,
+          validateMarketInsights,
+          cacheKey,
+          CACHE_TTL.LONG,
+          metadata
+        );
+      });
 
-      cache.set(cacheKey, formattedResponse)
-      return formattedResponse
-
+      return result;
     } catch (error: any) {
-      if (error.name === 'AIServiceError') throw error
+      if (error.name === 'AIServiceError') throw error;
+      handleAIError(error);
+    }
+  },
 
-      if (error.response?.status === 429) {
-        throw new AIServiceError(
-          'Rate limit exceeded. Please try again later.',
-          'RATE_LIMIT',
-          error.response.headers['retry-after']
-        )
+  async *streamResponse(response: QuestionnaireResponse, type: 'ideas' | 'questions' | 'suggestions' | 'insights') {
+    const userId = response.user_id;
+    await rateLimiter.consume(userId);
+
+    let prompt = '';
+    let template = '';
+    let systemMessage = '';
+
+    switch (type) {
+      case 'ideas':
+        prompt = `As a startup advisor, generate 3 detailed and personalized business ideas...`;
+        template = responseTemplates.businessIdea;
+        systemMessage = systemPrompts.businessIdea;
+        break;
+      case 'questions':
+        prompt = `Based on the following questionnaire responses, generate 5 specific follow-up questions...`;
+        template = responseTemplates.followUpQuestion;
+        systemMessage = systemPrompts.followUpQuestion;
+        break;
+      case 'suggestions':
+        prompt = `Based on the following profile, provide detailed, actionable suggestions...`;
+        template = responseTemplates.actionableSuggestions;
+        systemMessage = systemPrompts.actionableSuggestions;
+        break;
+      case 'insights':
+        prompt = `Analyze market opportunities based on this profile...`;
+        template = responseTemplates.marketInsights;
+        systemMessage = systemPrompts.marketInsights;
+        break;
+    }
+
+    try {
+      const stream = await openai.chat.completions.create({
+        model: MODELS.GPT4,
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        stream: true,
+      });
+
+      let buffer = '';
+      let section = '';
+      
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        buffer += content;
+        
+        // Detect section boundaries and yield complete sections
+        if (content.includes('---') || content.includes('==')) {
+          if (section) {
+            yield section;
+            section = '';
+          }
+          buffer = '';
+        } else if (content.includes('.') || content.includes('\n')) {
+          section += buffer;
+          buffer = '';
+        }
+      }
+      
+      // Yield any remaining content
+      if (buffer || section) {
+        yield buffer || section;
       }
 
-      throw new AIServiceError(
-        'Failed to generate market insights',
-        'GENERATION_ERROR'
-      )
+    } catch (error: any) {
+      if (error.name === 'AIServiceError') throw error;
+      handleAIError(error);
     }
   }
-}
+};
 
 ```
 
@@ -6478,11 +11208,20 @@ Description:
 Target Market:
 {targetMarket}
 
+Market Size:
+{marketSize}
+
 Required Skills:
 {skills}
 
 Initial Investment:
 {investment}
+
+Time to Market:
+{timeToMarket}
+
+Competitive Advantage:
+{competitiveAdvantage}
 
 Potential Challenges:
 {challenges}
@@ -6490,12 +11229,45 @@ Potential Challenges:
 First Steps:
 {steps}
 
+Success Metrics:
+{metrics}
+
+Market Validation:
+{validation}
+
+Scalability Potential:
+{scalabilityPotential}
+
+Technical Requirements:
+{techRequirements}
+
+Regulatory Considerations:
+{regulatoryConsiderations}
+
 ---
 `.trim(),
 
-  followUpQuestions: `
-Follow-up Question {number}: {question}
-Importance: {importance}
+  followUpQuestion: `
+Follow-up Question {number}
+=======================
+Question: {question}
+Category: {category}
+Priority: {priority}
+
+Importance:
+{importance}
+
+Context:
+{context}
+
+Expected Insights:
+{insights}
+
+Related Topics:
+{relatedTopics}
+
+Potential Answers:
+{potentialAnswers}
 
 ---
 `.trim(),
@@ -6505,22 +11277,40 @@ Actionable Plan
 ==============
 
 Immediate Next Steps (30 Days):
-{immediateSteps}
+{immediate_next_steps}
 
-Skill Development:
-{skillDevelopment}
+Skill Development Plan:
+{skill_development}
 
 Networking Strategy:
-{networking}
+{networking_strategy}
 
 Resource Allocation:
-{resources}
+{resource_allocation}
 
-Potential Pitfalls:
-{pitfalls}
+Cost Breakdown:
+{cost_breakdown}
+
+Resource Requirements:
+{resource_requirements}
 
 Implementation Timeline:
-{timeline}
+{implementation_timeline}
+
+Milestone Tracking:
+{milestone_tracking}
+
+Potential Pitfalls:
+{potential_pitfalls}
+
+Risk Mitigation:
+{risk_mitigation}
+
+Contingency Plans:
+{contingency_plans}
+
+Success Indicators:
+{success_indicators}
 
 ---
 `.trim(),
@@ -6529,58 +11319,234 @@ Implementation Timeline:
 Market Analysis
 ==============
 
-Current Trends:
-{trends}
+Current Market Trends:
+{current_trends}
+
+Market Size Analysis:
+{market_size_analysis}
 
 Market Gaps:
-{gaps}
+{market_gaps}
 
 Competitive Landscape:
-{competition}
+{competitive_landscape}
+
+Customer Segments:
+{customer_segments}
 
 Target Customers:
-{customers}
+{target_customers}
 
 Revenue Potential:
-{revenue}
+{revenue_potential}
+
+Pricing Strategy:
+{pricing_strategy}
+
+Distribution Channels:
+{distribution_channels}
 
 Entry Strategy:
-{strategy}
+{entry_strategy}
+
+Growth Opportunities:
+{growth_opportunities}
+
+Market Risks:
+{market_risks}
+
+Regulatory Environment:
+{regulatory_environment}
+
+Technology Trends:
+{technology_trends}
 
 ---
 `.trim()
 }
 
-export const formatResponse = (template: string, data: Record<string, string>): string => {
+export const systemPrompts = {
+  businessIdea: `You are an experienced startup advisor with expertise in business ideation and market analysis. Your task is to generate detailed, actionable business ideas based on the user's background and preferences. Focus on:
+- Practical and implementable ideas
+- Clear market opportunities
+- Realistic resource requirements
+- Specific success metrics
+- Actionable first steps
+Format your response exactly according to the template provided.`,
+
+  followUpQuestion: `You are a business consultant specializing in due diligence and strategic planning. Your task is to generate insightful follow-up questions that will help uncover critical aspects of the business opportunity. Focus on:
+- Strategic implications
+- Risk assessment
+- Market validation
+- Resource optimization
+Format your response exactly according to the template provided.`,
+
+  actionableSuggestions: `You are a startup mentor with experience in helping entrepreneurs execute their business plans. Your task is to provide detailed, actionable suggestions that will help turn ideas into reality. Focus on:
+- Concrete, time-bound actions
+- Resource optimization
+- Risk management
+- Success metrics
+Format your response exactly according to the template provided.`,
+
+  marketInsights: `You are a market research analyst with expertise in identifying market opportunities and trends. Your task is to provide comprehensive market insights that will help inform business strategy. Focus on:
+- Data-driven analysis
+- Market dynamics
+- Competitive positioning
+- Growth opportunities
+Format your response exactly according to the template provided.`
+}
+
+export const formatResponse = (template: string, data: Record<string, string | string[] | number>): string => {
   let result = template;
   for (const [key, value] of Object.entries(data)) {
-    result = result.replace(`{${key}}`, value);
+    const placeholder = `{${key}}`;
+    if (result.includes(placeholder)) {
+      if (Array.isArray(value)) {
+        result = result.replace(placeholder, value.map(v => `- ${v}`).join('\n'));
+      } else {
+        result = result.replace(placeholder, String(value));
+      }
+    }
   }
-  return result;
+  return result.trim();
+}
+
+export function parseAIResponse(response: string, type: 'ideas'): BusinessIdea[];
+export function parseAIResponse(response: string, type: 'questions'): FollowUpQuestion[];
+export function parseAIResponse(response: string, type: 'suggestions'): ActionableSuggestions;
+export function parseAIResponse(response: string, type: 'insights'): MarketInsights;
+export function parseAIResponse(
+  response: string,
+  type: 'ideas' | 'questions' | 'suggestions' | 'insights'
+): BusinessIdea[] | FollowUpQuestion[] | ActionableSuggestions | MarketInsights {
+  try {
+    switch (type) {
+      case 'ideas':
+        return parseBusinessIdeas(response);
+      case 'questions':
+        return parseFollowUpQuestions(response);
+      case 'suggestions':
+        return parseActionableSuggestions(response);
+      case 'insights':
+        return parseMarketInsights(response);
+    }
+  } catch (error) {
+    console.error(`Error parsing AI response for type ${type}:`, error);
+    throw new Error(`Failed to parse AI response for type ${type}`);
+  }
 }
 
 function parseBusinessIdeas(response: string): BusinessIdea[] {
-  return response.split('Business Idea:').filter(Boolean).map(idea => {
+  const ideas = response.split('Business Idea:').filter(Boolean);
+  return ideas.map(idea => {
     const sections = idea.split('\n\n');
-    return {
-      name: sections[0].trim(),
-      description: sections.find(s => s.includes('Description:'))?.split('Description:')[1]?.trim() || '',
-      targetMarket: sections.find(s => s.includes('Target Market:'))?.split('Target Market:')[1]?.trim() || '',
-      skills: sections.find(s => s.includes('Required Skills:'))?.split('Required Skills:')[1]?.trim() || '',
-      investment: sections.find(s => s.includes('Initial Investment:'))?.split('Initial Investment:')[1]?.trim() || '',
-      challenges: sections.find(s => s.includes('Potential Challenges:'))?.split('Potential Challenges:')[1]?.trim() || '',
-      steps: sections.find(s => s.includes('First Steps:'))?.split('First Steps:')[1]?.trim() || '',
+    const parsedIdea: BusinessIdea = {
+      name: '',
+      description: '',
+      targetMarket: '',
+      skills: '',
+      investment: '',
+      challenges: '',
+      steps: '',
+      metrics: '',
+      validation: '',
+      marketSize: '',
+      competitiveAdvantage: '',
+      timeToMarket: '',
+      scalabilityPotential: '',
+      techRequirements: '',
+      regulatoryConsiderations: ''
     };
+
+    sections.forEach(section => {
+      const [header, ...content] = section.split('\n');
+      const contentText = content.join('\n').trim();
+
+      const key = header.trim().toLowerCase()
+        .replace(/[:\s-]+/g, '')
+        .replace('market', 'marketSize')
+        .replace('technical', 'tech')
+        .replace('requirements', 'Requirements')
+        .replace('competitive', 'competitiveAdvantage')
+        .replace('time', 'timeToMarket')
+        .replace('scalability', 'scalabilityPotential')
+        .replace('regulatory', 'regulatoryConsiderations');
+
+      if (key in parsedIdea) {
+        (parsedIdea as any)[key] = contentText;
+      } else if (!parsedIdea.name && !header.includes(':')) {
+        parsedIdea.name = header.trim();
+      }
+    });
+
+    return parsedIdea;
   });
 }
 
 function parseFollowUpQuestions(response: string): FollowUpQuestion[] {
   return response.split('Follow-up Question').filter(Boolean).map(q => {
-    const [question, importance] = q.split('Importance:').map(s => s.trim());
-    return {
-      question: question.replace(/^\d+:\s*/, '').trim(),
-      importance: importance?.split('---')[0].trim() || '',
+    const sections = q.split('\n').filter(Boolean);
+    const question: FollowUpQuestion = {
+      question: '',
+      importance: '',
+      context: '',
+      insights: '',
+      category: '',
+      priority: 'medium',
+      relatedTopics: [],
+      potentialAnswers: []
     };
+
+    let currentSection = '';
+    sections.forEach(section => {
+      if (section.includes(':')) {
+        const [key, value] = section.split(':').map(s => s.trim());
+        const normalizedKey = key.toLowerCase();
+
+        switch (normalizedKey) {
+          case 'question':
+            question.question = value;
+            break;
+          case 'category':
+            question.category = value;
+            break;
+          case 'priority':
+            question.priority = value.toLowerCase() as 'high' | 'medium' | 'low';
+            break;
+          case 'importance':
+            currentSection = 'importance';
+            question.importance = value;
+            break;
+          case 'context':
+            currentSection = 'context';
+            question.context = value;
+            break;
+          case 'expected insights':
+            currentSection = 'insights';
+            question.insights = value;
+            break;
+          case 'related topics':
+            currentSection = 'relatedTopics';
+            if (value) question.relatedTopics = [value];
+            break;
+          case 'potential answers':
+            currentSection = 'potentialAnswers';
+            if (value) question.potentialAnswers = [value];
+            break;
+        }
+      } else if (section.trim().startsWith('-')) {
+        const value = section.trim().substring(1).trim();
+        if (currentSection === 'relatedTopics') {
+          question.relatedTopics.push(value);
+        } else if (currentSection === 'potentialAnswers') {
+          question.potentialAnswers.push(value);
+        }
+      } else if (currentSection && currentSection !== 'relatedTopics' && currentSection !== 'potentialAnswers') {
+        (question as any)[currentSection] += '\n' + section.trim();
+      }
+    });
+
+    return question;
   });
 }
 
@@ -6592,24 +11558,21 @@ function parseActionableSuggestions(response: string): ActionableSuggestions {
     networking_strategy: '',
     resource_allocation: '',
     potential_pitfalls: '',
-    implementation_timeline: ''
+    implementation_timeline: '',
+    risk_mitigation: '',
+    success_indicators: '',
+    milestone_tracking: '',
+    cost_breakdown: '',
+    resource_requirements: '',
+    contingency_plans: ''
   };
   
   sections.forEach(section => {
-    const lines = section.split('\n');
-    if (lines[0].includes(':')) {
-      const key = lines[0].split(':')[0].trim().toLowerCase().replace(/\s+/g, '_');
-      const validKeys: (keyof ActionableSuggestions)[] = [
-        'immediate_next_steps',
-        'skill_development',
-        'networking_strategy',
-        'resource_allocation',
-        'potential_pitfalls',
-        'implementation_timeline'
-      ];
-      
-      if (validKeys.includes(key as keyof ActionableSuggestions)) {
-        result[key as keyof ActionableSuggestions] = lines.slice(1).join('\n').trim();
+    const [header, ...content] = section.split('\n');
+    if (header.includes(':')) {
+      const key = header.split(':')[0].trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (key in result) {
+        result[key] = content.join('\n').trim();
       }
     }
   });
@@ -6625,49 +11588,28 @@ function parseMarketInsights(response: string): MarketInsights {
     competitive_landscape: '',
     target_customers: '',
     revenue_potential: '',
-    entry_strategy: ''
+    entry_strategy: '',
+    growth_opportunities: '',
+    market_risks: '',
+    market_size_analysis: '',
+    customer_segments: '',
+    pricing_strategy: '',
+    distribution_channels: '',
+    regulatory_environment: '',
+    technology_trends: ''
   };
   
   sections.forEach(section => {
-    const lines = section.split('\n');
-    if (lines[0].includes(':')) {
-      const key = lines[0].split(':')[0].trim().toLowerCase().replace(/\s+/g, '_');
-      const validKeys: (keyof MarketInsights)[] = [
-        'current_trends',
-        'market_gaps',
-        'competitive_landscape',
-        'target_customers',
-        'revenue_potential',
-        'entry_strategy'
-      ];
-      
-      if (validKeys.includes(key as keyof MarketInsights)) {
-        result[key as keyof MarketInsights] = lines.slice(1).join('\n').trim();
+    const [header, ...content] = section.split('\n');
+    if (header.includes(':')) {
+      const key = header.split(':')[0].trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (key in result) {
+        result[key] = content.join('\n').trim();
       }
     }
   });
   
   return result;
-}
-
-export function parseAIResponse(response: string, type: 'ideas'): BusinessIdea[];
-export function parseAIResponse(response: string, type: 'questions'): FollowUpQuestion[];
-export function parseAIResponse(response: string, type: 'suggestions'): ActionableSuggestions;
-export function parseAIResponse(response: string, type: 'insights'): MarketInsights;
-export function parseAIResponse(
-  response: string,
-  type: 'ideas' | 'questions' | 'suggestions' | 'insights'
-): BusinessIdea[] | FollowUpQuestion[] | ActionableSuggestions | MarketInsights {
-  switch (type) {
-    case 'ideas':
-      return parseBusinessIdeas(response);
-    case 'questions':
-      return parseFollowUpQuestions(response);
-    case 'suggestions':
-      return parseActionableSuggestions(response);
-    case 'insights':
-      return parseMarketInsights(response);
-  }
 }
 
 ```
@@ -6683,11 +11625,27 @@ export interface BusinessIdea {
   investment: string;
   challenges: string;
   steps: string;
+  metrics: string;
+  validation: string;
+  marketSize?: string;
+  competitiveAdvantage?: string;
+  timeToMarket?: string;
+  scalabilityPotential?: string;
+  techRequirements?: string;
+  regulatoryConsiderations?: string;
+  [key: string]: string | undefined;
 }
 
 export interface FollowUpQuestion {
   question: string;
   importance: string;
+  context: string;
+  insights: string;
+  category: string;
+  priority: 'high' | 'medium' | 'low';
+  relatedTopics: string[];
+  potentialAnswers: string[];
+  [key: string]: string | string[] | 'high' | 'medium' | 'low';
 }
 
 export interface ActionableSuggestions {
@@ -6697,7 +11655,13 @@ export interface ActionableSuggestions {
   resource_allocation: string;
   potential_pitfalls: string;
   implementation_timeline: string;
-  [key: string]: string; // Add index signature
+  risk_mitigation: string;
+  success_indicators: string;
+  milestone_tracking: string;
+  cost_breakdown: string;
+  resource_requirements: string;
+  contingency_plans: string;
+  [key: string]: string;
 }
 
 export interface MarketInsights {
@@ -6707,222 +11671,392 @@ export interface MarketInsights {
   target_customers: string;
   revenue_potential: string;
   entry_strategy: string;
-  [key: string]: string; // Add index signature
+  growth_opportunities: string;
+  market_risks: string;
+  market_size_analysis: string;
+  customer_segments: string;
+  pricing_strategy: string;
+  distribution_channels: string;
+  regulatory_environment: string;
+  technology_trends: string;
+  [key: string]: string;
+}
+
+export interface ResponseQuality {
+  completeness: number;
+  relevance: number;
+  specificity: number;
+  actionability: number;
+  overall: number;
+}
+
+export interface GenerationMetadata {
+  timestamp: number;
+  model: string;
+  temperature: number;
+  quality: ResponseQuality;
+  generationTime: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
 }
 
 export type ParsedResponse = 
-  | BusinessIdea[]
-  | FollowUpQuestion[]
-  | ActionableSuggestions
-  | MarketInsights;
+  | (BusinessIdea & { metadata: GenerationMetadata })[]
+  | (FollowUpQuestion & { metadata: GenerationMetadata })[]
+  | (ActionableSuggestions & { metadata: GenerationMetadata })
+  | (MarketInsights & { metadata: GenerationMetadata });
 
 export const isBusinessIdea = (obj: any): obj is BusinessIdea => {
+  const requiredFields: (keyof BusinessIdea)[] = [
+    'name', 'description', 'targetMarket', 'skills',
+    'investment', 'challenges', 'steps', 'metrics', 'validation'
+  ];
+  
   return (
     typeof obj === 'object' &&
-    'name' in obj &&
-    'description' in obj &&
-    'targetMarket' in obj &&
-    'skills' in obj &&
-    'investment' in obj &&
-    'challenges' in obj &&
-    'steps' in obj
+    requiredFields.every(field => field in obj)
   );
 };
 
 export const isFollowUpQuestion = (obj: any): obj is FollowUpQuestion => {
+  const requiredFields: (keyof FollowUpQuestion)[] = [
+    'question', 'importance', 'context', 'insights',
+    'category', 'priority', 'relatedTopics', 'potentialAnswers'
+  ];
+  
   return (
     typeof obj === 'object' &&
-    'question' in obj &&
-    'importance' in obj
+    requiredFields.every(field => field in obj)
   );
 };
 
 export const isActionableSuggestions = (obj: any): obj is ActionableSuggestions => {
+  const requiredFields: (keyof ActionableSuggestions)[] = [
+    'immediate_next_steps', 'skill_development', 'networking_strategy',
+    'resource_allocation', 'potential_pitfalls', 'implementation_timeline',
+    'risk_mitigation', 'success_indicators', 'milestone_tracking',
+    'cost_breakdown', 'resource_requirements', 'contingency_plans'
+  ];
+  
   return (
     typeof obj === 'object' &&
-    'immediate_next_steps' in obj &&
-    'skill_development' in obj &&
-    'networking_strategy' in obj &&
-    'resource_allocation' in obj &&
-    'potential_pitfalls' in obj &&
-    'implementation_timeline' in obj
+    requiredFields.every(field => field in obj)
   );
 };
 
 export const isMarketInsights = (obj: any): obj is MarketInsights => {
+  const requiredFields: (keyof MarketInsights)[] = [
+    'current_trends', 'market_gaps', 'competitive_landscape',
+    'target_customers', 'revenue_potential', 'entry_strategy',
+    'growth_opportunities', 'market_risks', 'market_size_analysis',
+    'customer_segments', 'pricing_strategy', 'distribution_channels',
+    'regulatory_environment', 'technology_trends'
+  ];
+  
   return (
     typeof obj === 'object' &&
-    'current_trends' in obj &&
-    'market_gaps' in obj &&
-    'competitive_landscape' in obj &&
-    'target_customers' in obj &&
-    'revenue_potential' in obj &&
-    'entry_strategy' in obj
+    requiredFields.every(field => field in obj)
   );
 };
+
+export const isBusinessIdeaArray = (obj: any): obj is BusinessIdea[] => {
+  return Array.isArray(obj) && obj.every(isBusinessIdea);
+};
+
+export const isFollowUpQuestionArray = (obj: any): obj is FollowUpQuestion[] => {
+  return Array.isArray(obj) && obj.every(isFollowUpQuestion);
+};
+
+export interface ValidationResult<T> {
+  isValid: boolean;
+  data: T | null;
+  errors: string[];
+  quality?: ResponseQuality;
+}
+
+export function validateResponseQuality(response: Record<string, unknown>): ResponseQuality {
+  const calculateScore = (value: unknown): number => {
+    if (typeof value !== 'string') return 0;
+    
+    const length = value.length;
+    const hasSpecificDetails = /\b(specifically|in particular|for example|such as)\b/i.test(value);
+    const hasNumbers = /\d+/.test(value);
+    const hasStructure = /\b(first|second|third|finally|moreover|however)\b/i.test(value);
+    
+    let score = 0;
+    if (length > 200) score += 0.3;
+    if (hasSpecificDetails) score += 0.3;
+    if (hasNumbers) score += 0.2;
+    if (hasStructure) score += 0.2;
+    
+    return Math.min(score, 1);
+  };
+
+  const stringValues = Object.entries(response)
+    .filter(([_, value]) => typeof value === 'string')
+    .map(([_, value]) => value);
+
+  const scores = stringValues.map(calculateScore);
+  
+  if (scores.length === 0) {
+    return {
+      completeness: 0,
+      relevance: 0,
+      specificity: 0,
+      actionability: 0,
+      overall: 0
+    };
+  }
+  
+  return {
+    completeness: scores.reduce((acc, score) => acc + score, 0) / scores.length,
+    relevance: scores.reduce((acc, score) => acc + score, 0) / scores.length,
+    specificity: scores.filter(score => score > 0.7).length / scores.length,
+    actionability: scores.filter(score => score > 0.8).length / scores.length,
+    overall: scores.reduce((acc, score) => acc + score, 0) / scores.length
+  };
+}
+
+export function validateBusinessIdeaArray(ideas: any): ValidationResult<BusinessIdea[]> {
+  const errors: string[] = [];
+  
+  if (!Array.isArray(ideas)) {
+    return {
+      isValid: false,
+      data: null,
+      errors: ['Expected an array of business ideas']
+    };
+  }
+
+  const validatedIdeas: BusinessIdea[] = [];
+  const requiredFields: (keyof BusinessIdea)[] = [
+    'name', 'description', 'targetMarket', 'skills',
+    'investment', 'challenges', 'steps', 'metrics', 'validation'
+  ];
+
+  ideas.forEach((idea, index) => {
+    requiredFields.forEach(field => {
+      if (!idea[field] || typeof idea[field] !== 'string' || !idea[field].trim()) {
+        errors.push(`Idea ${index + 1}: Missing or invalid ${field}`);
+      }
+    });
+    if (errors.length === 0) {
+      validatedIdeas.push(idea);
+    }
+  });
+
+  const quality = validateResponseQuality(
+    validatedIdeas[0] ? Object.fromEntries(
+      Object.entries(validatedIdeas[0]).filter(([_, v]) => typeof v === 'string')
+    ) : {}
+  );
+
+  return {
+    isValid: errors.length === 0 && quality.overall >= 0.7,
+    data: errors.length === 0 ? validatedIdeas : null,
+    errors,
+    quality
+  };
+}
+
+export function validateFollowUpQuestionArray(questions: any): ValidationResult<FollowUpQuestion[]> {
+  const errors: string[] = [];
+  
+  if (!Array.isArray(questions)) {
+    return {
+      isValid: false,
+      data: null,
+      errors: ['Expected an array of follow-up questions']
+    };
+  }
+
+  const validatedQuestions: FollowUpQuestion[] = [];
+  const requiredFields: (keyof FollowUpQuestion)[] = [
+    'question', 'importance', 'context', 'insights',
+    'category', 'priority', 'relatedTopics', 'potentialAnswers'
+  ];
+
+  questions.forEach((question, index) => {
+    requiredFields.forEach(field => {
+      if (!question[field] || 
+          (field !== 'relatedTopics' && field !== 'potentialAnswers' && typeof question[field] !== 'string') ||
+          (field === 'priority' && !['high', 'medium', 'low'].includes(question[field])) ||
+          ((field === 'relatedTopics' || field === 'potentialAnswers') && !Array.isArray(question[field]))) {
+        errors.push(`Question ${index + 1}: Missing or invalid ${field}`);
+      }
+    });
+    if (errors.length === 0) {
+      validatedQuestions.push(question);
+    }
+  });
+
+  const quality = validateResponseQuality(
+    validatedQuestions[0] ? Object.fromEntries(
+      Object.entries(validatedQuestions[0]).filter(([_, v]) => typeof v === 'string')
+    ) : {}
+  );
+
+  return {
+    isValid: errors.length === 0 && quality.overall >= 0.7,
+    data: errors.length === 0 ? validatedQuestions : null,
+    errors,
+    quality
+  };
+}
+
+export function validateActionableSuggestions(suggestions: any): ValidationResult<ActionableSuggestions> {
+  const errors: string[] = [];
+  const requiredFields: (keyof ActionableSuggestions)[] = [
+    'immediate_next_steps', 'skill_development', 'networking_strategy',
+    'resource_allocation', 'potential_pitfalls', 'implementation_timeline',
+    'risk_mitigation', 'success_indicators', 'milestone_tracking',
+    'cost_breakdown', 'resource_requirements', 'contingency_plans'
+  ];
+
+  requiredFields.forEach(field => {
+    if (!suggestions[field] || typeof suggestions[field] !== 'string' || !suggestions[field].trim()) {
+      errors.push(`Missing or invalid ${field}`);
+    }
+  });
+
+  const quality = validateResponseQuality(suggestions);
+
+  return {
+    isValid: errors.length === 0 && quality.overall >= 0.7,
+    data: errors.length === 0 ? suggestions : null,
+    errors,
+    quality
+  };
+}
+
+export function validateMarketInsights(insights: any): ValidationResult<MarketInsights> {
+  const errors: string[] = [];
+  const requiredFields: (keyof MarketInsights)[] = [
+    'current_trends', 'market_gaps', 'competitive_landscape',
+    'target_customers', 'revenue_potential', 'entry_strategy',
+    'growth_opportunities', 'market_risks', 'market_size_analysis',
+    'customer_segments', 'pricing_strategy', 'distribution_channels',
+    'regulatory_environment', 'technology_trends'
+  ];
+
+  requiredFields.forEach(field => {
+    if (!insights[field] || typeof insights[field] !== 'string' || !insights[field].trim()) {
+      errors.push(`Missing or invalid ${field}`);
+    }
+  });
+
+  const quality = validateResponseQuality(insights);
+
+  return {
+    isValid: errors.length === 0 && quality.overall >= 0.7,
+    data: errors.length === 0 ? insights : null,
+    errors,
+    quality
+  };
+}
 
 ```
 
 # src/lib/auth/AuthContext.tsx
 
 ```tsx
-// lib/auth/AuthContext.tsx
-'use client'
-
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { User, Session } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, ReactNode } from 'react';
+import { useSession, SessionProvider } from 'next-auth/react';
 
 interface AuthContextType {
-  user: User | null
-  session: Session | null
-  loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: Error | null; success: boolean }>
-  signUp: (email: string, password: string) => Promise<{ error: Error | null; success: boolean; confirmationRequired?: boolean }>
-  signOut: () => Promise<void>
+  getSession: () => Promise<{
+    user?: {
+      id: string;
+      email: string;
+      name?: string;
+    } | null;
+  }>;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClientComponentClient()
-  const router = useRouter()
-  
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const setServerSession = async () => {
-      try {
-        const { data: { session: sessionData }, error } = await supabase.auth.getSession()
-        
-        if (error) throw error
-        
-        console.log('AuthContext: Initial session check:', {
-          hasSession: !!sessionData,
-          user: sessionData?.user?.email
-        })
-        
-        setSession(sessionData)
-        setUser(sessionData?.user ?? null)
-      } catch (error) {
-        console.error('AuthContext: Error getting session:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    setServerSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('AuthContext: Auth state change:', event, {
-          hasSession: !!currentSession,
-          user: currentSession?.user?.email
-        })
-
-        setSession(currentSession)
-        setUser(currentSession?.user ?? null)
-
-        if (event === 'SIGNED_IN') {
-          // Force refresh to ensure middleware catches the new session
-          router.refresh()
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setSession(null)
-          router.refresh()
-          router.push('/login')
-        }
-      }
-    )
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase, router])
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      console.log('AuthContext: Sign in attempt:', {
-        success: !!data.session,
-        user: data.session?.user?.email,
-        error: error?.message
-      })
-
-      if (error) throw error
-
-      return { error: null, success: true }
-    } catch (error) {
-      console.error('AuthContext: Sign in error:', error)
-      return {
-        error: error as Error,
-        success: false
-      }
-    }
+export const auth: AuthContextType = {
+  getSession: async () => {
+    const session = await useSession();
+    return {
+      user: session?.data?.user ? {
+        id: session.data.user.id,
+        email: session.data.user.email!,
+        name: session.data.user.name || undefined
+      } : null
+    };
   }
+};
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
+const AuthContext = createContext<AuthContextType>(auth);
 
-      console.log('AuthContext: Sign up attempt:', {
-        success: !!data.user,
-        user: data.user?.email,
-        error: error?.message
-      })
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
-      if (error) throw error
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-      return {
-        error: null,
-        success: true,
-        confirmationRequired: data.session === null
-      }
-    } catch (error) {
-      console.error('AuthContext: Sign up error:', error)
-      return {
-        error: error as Error,
-        success: false
-      }
-    }
-  }
-
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut()
-      console.log('AuthContext: Sign out successful')
-    } catch (error) {
-      console.error('AuthContext: Sign out error:', error)
-    }
-  }
-
+export function AuthProvider({ children }: AuthProviderProps) {
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  )
+    <SessionProvider>
+      <AuthContext.Provider value={auth}>
+        {children}
+      </AuthContext.Provider>
+    </SessionProvider>
+  );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+```
+
+# src/lib/hooks/use-keyboard-shortcuts.ts
+
+```ts
+import { useEffect } from 'react';
+
+interface ShortcutHandler {
+  key: string;
+  ctrl?: boolean;
+  alt?: boolean;
+  shift?: boolean;
+  handler: () => void;
 }
+
+export function useKeyboardShortcuts(shortcuts: ShortcutHandler[]) {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      // Check if the active element is an input or textarea
+      const isInputActive = document.activeElement instanceof HTMLInputElement || 
+                          document.activeElement instanceof HTMLTextAreaElement;
+
+      // Don't trigger shortcuts when typing in input fields
+      if (isInputActive) return;
+
+      shortcuts.forEach(shortcut => {
+        const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
+        const ctrlMatch = shortcut.ctrl ? event.ctrlKey || event.metaKey : true;
+        const altMatch = shortcut.alt ? event.altKey : true;
+        const shiftMatch = shortcut.shift ? event.shiftKey : true;
+
+        if (keyMatch && ctrlMatch && altMatch && shiftMatch) {
+          event.preventDefault();
+          shortcut.handler();
+        }
+      });
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shortcuts]);
+}
+
+// Predefined shortcuts for common actions
+export const COMMON_SHORTCUTS = {
+  SEARCH: { key: 'k', ctrl: true },
+  NEW: { key: 'n', ctrl: true },
+  SAVE: { key: 's', ctrl: true },
+  CLOSE: { key: 'escape' },
+} as const;
 
 ```
 
@@ -6974,139 +12108,208 @@ export const useAnalytics = () => {
 
 ```
 
+# src/lib/hooks/useIdeaSharing.ts
+
+```ts
+import { useState } from 'react';
+import { BusinessIdea } from '@/lib/ai/types';
+
+interface ShareOptions {
+  title?: string;
+  text?: string;
+  url?: string;
+  files?: File[];
+}
+
+interface UseIdeaSharingReturn {
+  isSharing: boolean;
+  shareIdea: (idea: BusinessIdea) => Promise<void>;
+  generateShareableLink: (idea: BusinessIdea) => Promise<string>;
+  exportToPDF: (idea: BusinessIdea) => Promise<Blob>;
+  error: Error | null;
+}
+
+export function useIdeaSharing(userId: string): UseIdeaSharingReturn {
+  const [isSharing, setIsSharing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const formatIdeaForSharing = (idea: BusinessIdea): string => {
+    return `
+Business Idea: ${idea.name}
+
+Description:
+${idea.description}
+
+Target Market:
+${idea.targetMarket}
+
+Required Skills:
+${idea.skills}
+
+Initial Investment:
+${idea.investment}
+
+First Steps:
+${idea.steps}
+
+Success Metrics:
+${idea.metrics}
+
+Market Validation:
+${idea.validation}
+    `.trim();
+  };
+
+  const shareViaNavigator = async (options: ShareOptions) => {
+    if (typeof navigator.share !== 'function') {
+      throw new Error('Web Share API not supported');
+    }
+    await navigator.share(options);
+  };
+
+  const generateShareableLink = async (idea: BusinessIdea): Promise<string> => {
+    // This would typically involve creating a shareable link through your backend
+    const baseUrl = window.location.origin;
+    const shareableId = btoa(JSON.stringify({ ideaId: idea.name, userId }));
+    return `${baseUrl}/shared-ideas/${shareableId}`;
+  };
+
+  const exportToPDF = async (idea: BusinessIdea): Promise<Blob> => {
+    try {
+      // This is a placeholder for PDF generation
+      // In a real implementation, you'd use a library like pdfmake or jsPDF
+      const content = formatIdeaForSharing(idea);
+      return new Blob([content], { type: 'application/pdf' });
+    } catch (err) {
+      throw new Error('Failed to generate PDF');
+    }
+  };
+
+  const shareIdea = async (idea: BusinessIdea) => {
+    setIsSharing(true);
+    setError(null);
+
+    try {
+      // Try native sharing first
+      if (typeof navigator.share === 'function') {
+        const shareableLink = await generateShareableLink(idea);
+        await shareViaNavigator({
+          title: idea.name,
+          text: idea.description,
+          url: shareableLink
+        });
+        return;
+      }
+
+      // Fallback to clipboard
+      const shareableLink = await generateShareableLink(idea);
+      await navigator.clipboard.writeText(shareableLink);
+      
+      // You might want to show a toast notification here
+      console.log('Link copied to clipboard');
+
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to share idea'));
+      console.error('Error sharing idea:', err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  return {
+    isSharing,
+    shareIdea,
+    generateShareableLink,
+    exportToPDF,
+    error
+  };
+}
+
+// Helper function to check if sharing is supported
+export function isSharingSupported(): boolean {
+  return typeof navigator.share === 'function';
+}
+
+// Helper function to check if the Web Share API supports files
+export function isFilesSharingSupported(): boolean {
+  return typeof navigator.canShare === 'function' && navigator.canShare({ files: [] });
+}
+
+```
+
 # src/lib/hooks/useSubscription.ts
 
 ```ts
-import React, { useState, useEffect } from 'react'
-import { SubscriptionData, PaymentPlan, isFeatureAvailable } from '@/lib/stripe/config'
+import { useState, useEffect } from 'react';
+import { stripeService } from '@/lib/stripe/service';
+import { SubscriptionTier, SUBSCRIPTION_TIERS } from '@/lib/stripe/config';
 
-interface UseSubscriptionReturn {
-  subscription: SubscriptionData | null
-  loading: boolean
-  error: string | null
-  isFeatureEnabled: (feature: string) => boolean
-  canGenerateIdea: boolean
-  refreshSubscription: () => Promise<void>
+export interface SubscriptionDetails {
+  id: string;
+  tier: SubscriptionTier;
+  status: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  usage?: {
+    ideaGenerations: number;
+    savedIdeas: number;
+    aiQueries: number;
+  };
 }
 
-export function useSubscription(): UseSubscriptionReturn {
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export interface UseSubscriptionReturn {
+  subscription: SubscriptionDetails | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useSubscription(userId?: string): UseSubscriptionReturn {
+  const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = async () => {
-    try {
-      const response = await fetch('/api/stripe/subscription')
-      if (!response.ok) throw new Error('Failed to fetch subscription')
-      const data = await response.json()
-      setSubscription(data)
-      setError(null)
-    } catch (err) {
-      setError('Failed to load subscription status')
-      console.error(err)
-    } finally {
-      setLoading(false)
+    if (!userId) {
+      setSubscription(null);
+      setIsLoading(false);
+      return;
     }
-  }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const details = await stripeService.getSubscriptionDetails(userId);
+      if (details) {
+        setSubscription({
+          id: details.id,
+          tier: details.tier,
+          status: details.status,
+          current_period_end: details.current_period_end,
+          cancel_at_period_end: details.cancel_at_period_end || false,
+          usage: details.usage
+        });
+      } else {
+        setSubscription(null);
+      }
+    } catch (err) {
+      setError('Failed to load subscription details');
+      console.error('Error fetching subscription:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchSubscription()
-  }, [])
-
-  const isFeatureEnabled = (feature: string): boolean => {
-    if (!subscription) return false
-    return isFeatureAvailable(feature as any, subscription.plan)
-  }
-
-  const canGenerateIdea = (): boolean => {
-    if (!subscription) return false
-    return subscription.ideasRemaining > 0
-  }
+    fetchSubscription();
+  }, [userId]);
 
   return {
     subscription,
-    loading,
+    isLoading,
     error,
-    isFeatureEnabled,
-    canGenerateIdea: canGenerateIdea(),
-    refreshSubscription: fetchSubscription
-  }
-}
-
-// Higher-order component to protect premium features
-export function withPremiumFeature<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  featureName: string
-): React.FC<P> {
-  const WithPremiumFeatureComponent: React.FC<P> = (props) => {
-    const { isFeatureEnabled, loading } = useSubscription()
-
-    if (loading) {
-      return React.createElement('div', { className: 'animate-pulse' },
-        React.createElement('div', { className: 'h-8 bg-gray-200 rounded w-3/4 mb-4' }),
-        React.createElement('div', { className: 'h-8 bg-gray-200 rounded w-1/2' })
-      )
-    }
-
-    if (!isFeatureEnabled(featureName)) {
-      return React.createElement('div', { className: 'p-4 bg-gray-50 rounded-lg' },
-        React.createElement('h3', { className: 'font-semibold text-lg mb-2' }, 'Premium Feature'),
-        React.createElement('p', { className: 'text-gray-600 mb-4' }, 
-          'This feature is only available to premium subscribers.'
-        ),
-        React.createElement('button', {
-          onClick: () => window.location.href = '/pricing',
-          className: 'bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700'
-        }, 'Upgrade to Premium')
-      )
-    }
-
-    return React.createElement(WrappedComponent, props)
-  }
-
-  WithPremiumFeatureComponent.displayName = `WithPremiumFeature(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`
-
-  return WithPremiumFeatureComponent
-}
-
-interface UseIdeaGenerationReturn {
-  canGenerateIdea: boolean
-  generateIdea: <T>(generationFunction: () => Promise<T>) => Promise<T>
-  subscription: SubscriptionData | null
-  ideasRemaining: number
-}
-
-// Hook to manage idea generation limits
-export function useIdeaGeneration(): UseIdeaGenerationReturn {
-  const { subscription, canGenerateIdea, refreshSubscription } = useSubscription()
-
-  const generateIdea = async <T,>(generationFunction: () => Promise<T>): Promise<T> => {
-    if (!canGenerateIdea) {
-      throw new Error('Idea generation limit reached')
-    }
-
-    try {
-      const result = await generationFunction()
-      
-      // Increment usage and refresh subscription data
-      await fetch('/api/stripe/subscription', {
-        method: 'PUT'
-      })
-      await refreshSubscription()
-
-      return result
-    } catch (error) {
-      console.error('Failed to generate idea:', error)
-      throw error
-    }
-  }
-
-  return {
-    canGenerateIdea,
-    generateIdea,
-    subscription,
-    ideasRemaining: subscription?.ideasRemaining || 0
-  }
+    refetch: fetchSubscription
+  };
 }
 
 ```
@@ -7114,153 +12317,320 @@ export function useIdeaGeneration(): UseIdeaGenerationReturn {
 # src/lib/monitoring/index.ts
 
 ```ts
-import { WebVitals } from './types';
-
-// Error severity levels
-export enum ErrorSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  CRITICAL = 'critical',
+interface LogLevel {
+  error: string;
+  warn: string;
+  info: string;
+  debug: string;
 }
 
-// Error logging
-export const logError = (error: Error, severity: ErrorSeverity = ErrorSeverity.ERROR, context: Record<string, any> = {}) => {
-  const errorLog = {
-    timestamp: new Date().toISOString(),
-    severity,
-    error: {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    },
-    context: {
-      url: typeof window !== 'undefined' ? window.location.href : '',
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : '',
-      ...context,
-    },
-  };
+type LogMethod = (message: string, ...args: any[]) => void;
 
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('[Error Log]', errorLog);
-  }
+interface Logger {
+  error: LogMethod;
+  warn: LogMethod;
+  info: LogMethod;
+  debug: LogMethod;
+}
 
-  // In production, you would typically send this to a logging service
-  // Example: send to your backend API endpoint
-  if (process.env.NODE_ENV === 'production') {
-    fetch('/api/monitoring/error', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(errorLog),
-    }).catch(console.error); // Catch to prevent infinite error loops
-  }
+const LOG_LEVELS: LogLevel = {
+  error: 'ERROR',
+  warn: 'WARN',
+  info: 'INFO',
+  debug: 'DEBUG'
 };
 
-// Analytics tracking
-export const trackEvent = (eventName: string, properties: Record<string, any> = {}) => {
-  const event = {
-    timestamp: new Date().toISOString(),
-    event: eventName,
-    properties: {
-      url: typeof window !== 'undefined' ? window.location.href : '',
-      ...properties,
-    },
-  };
-
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[Analytics Event]', event);
+class MonitoringService implements Logger {
+  private formatMessage(level: string, message: string, args: any[]): string {
+    const timestamp = new Date().toISOString();
+    const formattedArgs = args.map(arg => 
+      arg instanceof Error ? arg.stack || arg.message : JSON.stringify(arg)
+    ).join(' ');
+    
+    return `[${timestamp}] ${level}: ${message} ${formattedArgs}`.trim();
   }
 
-  // In production, send to analytics endpoint
-  if (process.env.NODE_ENV === 'production') {
-    fetch('/api/monitoring/analytics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(event),
-    }).catch(console.error);
-  }
-};
-
-// Performance monitoring
-export const measureWebVitals = (onPerfEntry?: (metric: WebVitals) => void) => {
-  if (typeof window !== 'undefined' && onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(onPerfEntry);
-      getFID(onPerfEntry);
-      getFCP(onPerfEntry);
-      getLCP(onPerfEntry);
-      getTTFB(onPerfEntry);
-    });
-  }
-};
-
-// Performance metric reporting
-export const reportPerformanceMetric = (metric: WebVitals) => {
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[Performance Metric]', metric);
+  error(message: string, ...args: any[]): void {
+    console.error(this.formatMessage(LOG_LEVELS.error, message, args));
   }
 
-  // In production, send to monitoring endpoint
-  if (process.env.NODE_ENV === 'production') {
-    fetch('/api/monitoring/performance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(metric),
-    }).catch(console.error);
+  warn(message: string, ...args: any[]): void {
+    console.warn(this.formatMessage(LOG_LEVELS.warn, message, args));
   }
-};
+
+  info(message: string, ...args: any[]): void {
+    console.info(this.formatMessage(LOG_LEVELS.info, message, args));
+  }
+
+  debug(message: string, ...args: any[]): void {
+    console.debug(this.formatMessage(LOG_LEVELS.debug, message, args));
+  }
+}
+
+export const logger = new MonitoringService();
 
 ```
 
 # src/lib/monitoring/types.ts
 
 ```ts
-// Web Vitals metrics type
-export interface WebVitals {
-  id: string;
-  name: string;
-  value: number;
-  rating: 'good' | 'needs-improvement' | 'poor';
-  delta: number;
-  entries: PerformanceEntry[];
+import { z } from 'zod';
+
+export const ErrorSeverityEnum = {
+    INFO: 'info',
+    WARNING: 'warning',
+    ERROR: 'error',
+    CRITICAL: 'critical'
+} as const;
+
+export type ErrorSeverity = typeof ErrorSeverityEnum[keyof typeof ErrorSeverityEnum];
+
+export const WebVitalsSchema = z.object({
+    id: z.string(),
+    name: z.enum(['CLS', 'FID', 'FCP', 'LCP', 'TTFB']),
+    value: z.number(),
+    rating: z.enum(['good', 'needs-improvement', 'poor']),
+    delta: z.number(),
+    entries: z.array(z.any())
+});
+
+export const ErrorLogSchema = z.object({
+    timestamp: z.string(),
+    severity: z.enum(['info', 'warning', 'error', 'critical']),
+    error: z.object({
+        name: z.string(),
+        message: z.string(),
+        stack: z.string().optional()
+    }),
+    context: z.object({
+        url: z.string(),
+        userAgent: z.string()
+    }).catchall(z.unknown())
+});
+
+export const AnalyticsEventSchema = z.object({
+    timestamp: z.string(),
+    event: z.string(),
+    properties: z.object({
+        url: z.string()
+    }).catchall(z.unknown()),
+    userId: z.string().optional(),
+    sessionId: z.string().optional()
+});
+
+export const RequestMetricsSchema = z.object({
+    path: z.string(),
+    method: z.string(),
+    duration: z.number(),
+    timestamp: z.string(),
+    statusCode: z.number().optional(),
+    userAgent: z.string().optional(),
+    ip: z.string().optional(),
+    country: z.string().optional(),
+    authenticated: z.boolean().optional()
+});
+
+export const PerformanceMetricSchema = z.object({
+    name: z.string(),
+    value: z.number(),
+    timestamp: z.string()
+}).catchall(z.unknown());
+
+export type WebVitals = z.infer<typeof WebVitalsSchema>;
+export type ErrorLog = z.infer<typeof ErrorLogSchema>;
+export type AnalyticsEvent = z.infer<typeof AnalyticsEventSchema>;
+export type RequestMetrics = z.infer<typeof RequestMetricsSchema>;
+export type PerformanceMetric = z.infer<typeof PerformanceMetricSchema>;
+```
+
+# src/lib/questionnaire/flow-manager.ts
+
+```ts
+import { Question, QuestionnaireProgress, questions } from './questions';
+
+interface BranchingRule {
+  questionId: string;
+  condition: (answers: { [key: string]: any }) => boolean;
+  nextQuestionId: string;
 }
 
-// Error log type
-export interface ErrorLog {
-  timestamp: string;
-  severity: string;
-  error: {
-    name: string;
-    message: string;
-    stack?: string;
-  };
-  context: {
-    url: string;
-    userAgent: string;
-    [key: string]: any;
-  };
+interface Checkpoint {
+  questionId: string;
+  timestamp: number;
+  answers: { [key: string]: any };
+  progress: number;
 }
 
-// Analytics event type
-export interface AnalyticsEvent {
-  timestamp: string;
-  event: string;
-  properties: {
-    url: string;
-    [key: string]: any;
-  };
+export class QuestionnaireFlowManager {
+  private static instance: QuestionnaireFlowManager;
+  private branchingRules: BranchingRule[] = [];
+  private checkpoints: Checkpoint[] = [];
+  private autoSaveInterval: number = 30000; // 30 seconds
+  private lastAutoSave: number = Date.now();
+
+  private constructor() {
+    // Initialize default branching rules
+    this.initializeBranchingRules();
+  }
+
+  public static getInstance(): QuestionnaireFlowManager {
+    if (!QuestionnaireFlowManager.instance) {
+      QuestionnaireFlowManager.instance = new QuestionnaireFlowManager();
+    }
+    return QuestionnaireFlowManager.instance;
+  }
+
+  private initializeBranchingRules() {
+    // Add sophisticated branching rules
+    this.addBranchingRule({
+      questionId: 'education',
+      condition: (answers) => {
+        const education = answers['education'] || [];
+        return education.includes("PhD") || education.includes("Master's Degree");
+      },
+      nextQuestionId: 'industry_experience'
+    });
+
+    this.addBranchingRule({
+      questionId: 'industry_experience',
+      condition: (answers) => {
+        const industries = answers['industry_experience'] || [];
+        return industries.length >= 3;
+      },
+      nextQuestionId: 'market_size'
+    });
+
+    // Add more complex branching rules based on multiple answers
+    this.addBranchingRule({
+      questionId: 'market_size',
+      condition: (answers) => {
+        const marketSize = answers['market_size'];
+        const education = answers['education'] || [];
+        const hasHigherEducation = education.includes("PhD") || education.includes("Master's Degree");
+        return (marketSize === "Global" || marketSize === "International") && hasHigherEducation;
+      },
+      nextQuestionId: 'international_experience'
+    });
+  }
+
+  public addBranchingRule(rule: BranchingRule) {
+    this.branchingRules.push(rule);
+  }
+
+  public getNextQuestion(currentQuestionId: string, answers: { [key: string]: any }): string | null {
+    // Check custom branching rules first
+    const matchingRule = this.branchingRules.find(rule => 
+      rule.questionId === currentQuestionId && rule.condition(answers)
+    );
+
+    if (matchingRule) {
+      return matchingRule.nextQuestionId;
+    }
+
+    // Fall back to default branching logic
+    const currentQuestion = questions.find(q => q.id === currentQuestionId);
+    if (!currentQuestion) return null;
+
+    if (typeof currentQuestion.nextQuestionId === 'function') {
+      return currentQuestion.nextQuestionId(answers[currentQuestionId]);
+    }
+
+    if (typeof currentQuestion.nextQuestionId === 'string') {
+      return currentQuestion.nextQuestionId;
+    }
+
+    return null;
+  }
+
+  public createCheckpoint(progress: QuestionnaireProgress): void {
+    const currentQuestion = questions.find(q => q.id === progress.currentQuestionId);
+    
+    if (currentQuestion?.checkpoint) {
+      this.checkpoints.push({
+        questionId: progress.currentQuestionId,
+        timestamp: Date.now(),
+        answers: { ...progress.answers },
+        progress: this.calculateProgress(progress.answers)
+      });
+
+      // Store checkpoint in localStorage
+      this.saveCheckpointsToStorage();
+    }
+  }
+
+  public restoreCheckpoint(checkpointId: string): QuestionnaireProgress | null {
+    const checkpoint = this.checkpoints.find(cp => cp.questionId === checkpointId);
+    
+    if (checkpoint) {
+      return {
+        currentQuestionId: checkpoint.questionId,
+        answers: { ...checkpoint.answers },
+        completed: false,
+        lastCheckpoint: checkpoint.questionId,
+        lastSaved: checkpoint.timestamp
+      };
+    }
+
+    return null;
+  }
+
+  public shouldAutoSave(lastSaved?: number): boolean {
+    if (!lastSaved) return true;
+    return Date.now() - lastSaved >= this.autoSaveInterval;
+  }
+
+  public autoSave(progress: QuestionnaireProgress): void {
+    if (this.shouldAutoSave(progress.lastSaved)) {
+      const updatedProgress = {
+        ...progress,
+        lastSaved: Date.now()
+      };
+
+      // Save to localStorage
+      localStorage.setItem('questionnaireProgress', JSON.stringify(updatedProgress));
+      this.lastAutoSave = Date.now();
+
+      // Create checkpoint if current question is a checkpoint
+      this.createCheckpoint(updatedProgress);
+    }
+  }
+
+  public calculateProgress(answers: { [key: string]: any }): number {
+    const answeredQuestions = Object.keys(answers).length;
+    const totalQuestions = questions.length;
+    return Math.round((answeredQuestions / totalQuestions) * 100);
+  }
+
+  private saveCheckpointsToStorage(): void {
+    localStorage.setItem('questionnaireCheckpoints', JSON.stringify(this.checkpoints));
+  }
+
+  public loadCheckpointsFromStorage(): void {
+    const savedCheckpoints = localStorage.getItem('questionnaireCheckpoints');
+    if (savedCheckpoints) {
+      this.checkpoints = JSON.parse(savedCheckpoints);
+    }
+  }
+
+  public getCheckpoints(): Checkpoint[] {
+    return this.checkpoints;
+  }
+
+  public getLastCheckpoint(): Checkpoint | null {
+    if (this.checkpoints.length === 0) return null;
+    return this.checkpoints[this.checkpoints.length - 1];
+  }
+
+  public setAutoSaveInterval(interval: number): void {
+    this.autoSaveInterval = interval;
+  }
+
+  public getAutoSaveInterval(): number {
+    return this.autoSaveInterval;
+  }
 }
 
-// Performance metric type
-export interface PerformanceMetric {
-  name: string;
-  value: number;
-  timestamp: string;
-  [key: string]: any;
-}
+export const flowManager = QuestionnaireFlowManager.getInstance();
 
 ```
 
@@ -7268,56 +12638,375 @@ export interface PerformanceMetric {
 
 ```ts
 export interface Question {
-  id: string
-  text: string
-  options: string[]
+  id: string;
+  text: string;
+  section: string;
+  type: 'text' | 'choice' | 'multiple' | 'scale' | 'like-dislike' | 'yes-no';
+  options?: string[];
+  nextQuestionId?: string | { [key: string]: string } | ((answer: any) => string | null); // Enhanced branching logic
+  validation?: {
+    required?: boolean;
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+  };
+  checkpoint?: boolean; // For progress saving
+  skipIf?: (answers: { [key: string]: any }) => boolean; // Skip logic
+}
+
+export interface QuestionnaireProgress {
+  currentQuestionId: string;
+  answers: { [key: string]: any };
+  completed: boolean;
+  lastCheckpoint?: string;
+  lastSaved?: number; // Timestamp for auto-save
 }
 
 export const questions: Question[] = [
+  // Personal Background Section
   {
-    id: "experience",
-    text: "What's your professional background?",
+    id: "early_experiences",
+    section: "Personal Background",
+    text: "What early experiences have shaped your entrepreneurial interests?",
+    type: "text",
+    validation: { required: true, minLength: 50 },
+    nextQuestionId: "education",
+    checkpoint: true
+  },
+  {
+    id: "education",
+    section: "Personal Background",
+    text: "What is your educational background?",
+    type: "multiple",
     options: [
-      "Technology / Software Development",
-      "Business / Management",
-      "Creative / Design",
-      "Marketing / Sales",
+      "High School",
+      "Bachelor's Degree",
+      "Master's Degree",
+      "PhD",
+      "Self-taught",
+      "Professional Certifications",
       "Other"
-    ]
+    ],
+    nextQuestionId: (answer: string[]) => {
+      // Skip career aspirations for highly educated individuals
+      if (answer.includes("PhD") || answer.includes("Master's Degree")) {
+        return "industry_experience";
+      }
+      return "career_aspirations";
+    },
+    validation: { required: true }
   },
   {
-    id: "interests",
-    text: "What type of business interests you the most?",
+    id: "career_aspirations",
+    section: "Personal Background",
+    text: "What are your long-term career aspirations?",
+    type: "text",
+    validation: { required: true },
+    nextQuestionId: "industry_experience",
+    checkpoint: true,
+    skipIf: (answers) => {
+      const education = answers["education"] || [];
+      return education.includes("PhD") || education.includes("Master's Degree");
+    }
+  },
+
+  // Market Analysis Section
+  {
+    id: "industry_experience",
+    section: "Market Analysis",
+    text: "What industries do you have experience in or knowledge about?",
+    type: "multiple",
     options: [
-      "Software / Apps",
-      "E-commerce",
-      "Consulting / Services",
-      "Content Creation",
-      "Physical Products"
-    ]
+      "Technology",
+      "Healthcare",
+      "Finance",
+      "Education",
+      "Retail",
+      "Manufacturing",
+      "Services",
+      "Other"
+    ],
+    nextQuestionId: (answer: string[]) => {
+      // Skip competition awareness for those with diverse experience
+      if (answer.length >= 3) {
+        return "market_size";
+      }
+      return "competition_awareness";
+    },
+    validation: { required: true }
   },
   {
-    id: "commitment",
-    text: "How much time can you commit to your startup?",
-    options: [
-      "Full-time",
-      "Part-time (20+ hours/week)",
-      "Side project (10-20 hours/week)",
-      "Minimal time (5-10 hours/week)"
-    ]
+    id: "competition_awareness",
+    section: "Market Analysis",
+    text: "How would you rate your understanding of market competition?",
+    type: "scale",
+    nextQuestionId: "market_size",
+    validation: { required: true },
+    skipIf: (answers) => {
+      const industries = answers["industry_experience"] || [];
+      return industries.length >= 3;
+    }
   },
   {
-    id: "resources",
-    text: "What resources do you currently have available?",
+    id: "market_size",
+    section: "Market Analysis",
+    text: "What market size are you targeting for your business?",
+    type: "choice",
     options: [
-      "Savings / Capital to invest",
-      "Technical skills",
-      "Industry connections",
-      "Marketing expertise",
-      "Just getting started"
-    ]
+      "Local/Regional",
+      "National",
+      "International",
+      "Global",
+      "Niche Market",
+      "Not Sure Yet"
+    ],
+    nextQuestionId: (answer: string) => {
+      // Additional questions for global aspirations
+      if (answer === "Global" || answer === "International") {
+        return "international_experience";
+      }
+      return "work_style";
+    },
+    checkpoint: true
+  },
+  {
+    id: "international_experience",
+    section: "Market Analysis",
+    text: "Do you have experience working with international markets?",
+    type: "yes-no",
+    nextQuestionId: "work_style",
+    skipIf: (answers) => {
+      const marketSize = answers["market_size"];
+      return marketSize !== "Global" && marketSize !== "International";
+    }
+  },
+
+  // Business Operations Section
+  {
+    id: "work_style",
+    section: "Business Operations",
+    text: "What's your preferred work style?",
+    type: "choice",
+    options: [
+      "Independent Worker",
+      "Team Leader",
+      "Collaborative",
+      "Hybrid Approach"
+    ],
+    nextQuestionId: (answer: string) => {
+      // Skip management questions for independent workers
+      if (answer === "Independent Worker") {
+        return "investment_capacity";
+      }
+      return "management_approach";
+    }
+  },
+  {
+    id: "management_approach",
+    section: "Business Operations",
+    text: "What management approach resonates with you?",
+    type: "choice",
+    options: [
+      "Hands-on Leadership",
+      "Delegative Management",
+      "Democratic Decision-making",
+      "Results-oriented Management"
+    ],
+    nextQuestionId: "team_building",
+    skipIf: (answers) => answers["work_style"] === "Independent Worker"
+  },
+  {
+    id: "team_building",
+    section: "Business Operations",
+    text: "How do you plan to build your team?",
+    type: "multiple",
+    options: [
+      "Hire Full-time Employees",
+      "Work with Contractors",
+      "Build Remote Team",
+      "Start Solo",
+      "Partner with Others"
+    ],
+    nextQuestionId: "investment_capacity",
+    checkpoint: true,
+    skipIf: (answers) => answers["work_style"] === "Independent Worker"
+  },
+
+  // Financial Planning Section
+  {
+    id: "investment_capacity",
+    section: "Financial Planning",
+    text: "What is your initial investment capacity?",
+    type: "choice",
+    options: [
+      "Bootstrap (< $5,000)",
+      "Small Investment ($5,000 - $25,000)",
+      "Medium Investment ($25,000 - $100,000)",
+      "Large Investment (> $100,000)",
+      "Seeking External Funding"
+    ],
+    nextQuestionId: (answer: string) => {
+      // Additional funding questions for larger investments
+      if (answer === "Large Investment (> $100,000)" || answer === "Seeking External Funding") {
+        return "funding_timeline";
+      }
+      return "revenue_expectations";
+    }
+  },
+  {
+    id: "funding_timeline",
+    section: "Financial Planning",
+    text: "What is your expected timeline for securing funding?",
+    type: "choice",
+    options: [
+      "Immediate",
+      "3-6 months",
+      "6-12 months",
+      "More than 12 months"
+    ],
+    nextQuestionId: "revenue_expectations",
+    skipIf: (answers) => {
+      const investment = answers["investment_capacity"];
+      return investment !== "Large Investment (> $100,000)" && investment !== "Seeking External Funding";
+    }
+  },
+  {
+    id: "revenue_expectations",
+    section: "Financial Planning",
+    text: "What are your first-year revenue expectations?",
+    type: "choice",
+    options: [
+      "< $50,000",
+      "$50,000 - $100,000",
+      "$100,000 - $500,000",
+      "> $500,000",
+      "Not Sure Yet"
+    ],
+    nextQuestionId: "risk_tolerance",
+    checkpoint: true
+  },
+  {
+    id: "risk_tolerance",
+    section: "Financial Planning",
+    text: "How would you describe your risk tolerance?",
+    type: "scale",
+    nextQuestionId: "digital_literacy",
+    checkpoint: true
+  },
+
+  // Technical Capabilities Section
+  {
+    id: "digital_literacy",
+    section: "Technical Capabilities",
+    text: "Rate your comfort level with digital technologies:",
+    type: "scale",
+    nextQuestionId: (answer: number) => {
+      // Skip basic tech questions for highly tech-savvy users
+      if (answer >= 4) {
+        return "advanced_tech_skills";
+      }
+      return "tech_skills";
+    }
+  },
+  {
+    id: "tech_skills",
+    section: "Technical Capabilities",
+    text: "What technical skills do you possess?",
+    type: "multiple",
+    options: [
+      "Programming/Development",
+      "Digital Marketing",
+      "Data Analysis",
+      "Design/UX",
+      "Project Management",
+      "None Yet"
+    ],
+    nextQuestionId: "software_proficiency",
+    skipIf: (answers) => (answers["digital_literacy"] || 0) >= 4
+  },
+  {
+    id: "advanced_tech_skills",
+    section: "Technical Capabilities",
+    text: "Which advanced technical areas are you proficient in?",
+    type: "multiple",
+    options: [
+      "Cloud Architecture",
+      "AI/Machine Learning",
+      "Blockchain",
+      "DevOps",
+      "Cybersecurity",
+      "System Design"
+    ],
+    nextQuestionId: "software_proficiency",
+    skipIf: (answers) => (answers["digital_literacy"] || 0) < 4
+  },
+  {
+    id: "software_proficiency",
+    section: "Technical Capabilities",
+    text: "Which business software are you proficient in?",
+    type: "multiple",
+    options: [
+      "Office Suite",
+      "Accounting Software",
+      "CRM Systems",
+      "Design Tools",
+      "Project Management Tools",
+      "Development Tools",
+      "None Yet"
+    ],
+    checkpoint: true
   }
-]
+];
+
+export const getNextQuestionId = (currentQuestion: Question, answer: any): string | null => {
+  if (!currentQuestion.nextQuestionId) return null;
+  
+  if (typeof currentQuestion.nextQuestionId === 'function') {
+    return currentQuestion.nextQuestionId(answer);
+  }
+  
+  if (typeof currentQuestion.nextQuestionId === 'string') {
+    return currentQuestion.nextQuestionId;
+  }
+  
+  return currentQuestion.nextQuestionId[answer] || currentQuestion.nextQuestionId['default'];
+};
+
+export const shouldSkipQuestion = (question: Question, answers: { [key: string]: any }): boolean => {
+  return question.skipIf ? question.skipIf(answers) : false;
+};
+
+export const calculateProgress = (answers: { [key: string]: any }): number => {
+  const answeredQuestions = Object.keys(answers).length;
+  const totalQuestions = questions.filter(q => !shouldSkipQuestion(q, answers)).length;
+  return Math.round((answeredQuestions / totalQuestions) * 100);
+};
+
+export const getCurrentSection = (questionId: string): string => {
+  const question = questions.find(q => q.id === questionId);
+  return question?.section || '';
+};
+
+export const getSectionProgress = (answers: { [key: string]: any }): { [key: string]: number } => {
+  const sections = [...new Set(questions.map(q => q.section))];
+  const progress: { [key: string]: number } = {};
+  
+  sections.forEach(section => {
+    const sectionQuestions = questions.filter(q => q.section === section && !shouldSkipQuestion(q, answers));
+    const answeredQuestions = sectionQuestions.filter(q => answers[q.id]);
+    progress[section] = Math.round((answeredQuestions.length / sectionQuestions.length) * 100);
+  });
+  
+  return progress;
+};
+
+export const getLastCheckpoint = (answers: { [key: string]: any }): string | null => {
+  const answeredQuestions = questions.filter(q => answers[q.id] && !shouldSkipQuestion(q, answers));
+  const lastCheckpoint = [...answeredQuestions].reverse().find(q => q.checkpoint);
+  return lastCheckpoint?.id || null;
+};
+
+export const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
 ```
 
@@ -7797,7 +13486,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia', // Latest API version
+  apiVersion: '2024-11-20.acacia',
   typescript: true,
 })
 
@@ -7807,48 +13496,138 @@ if (!STRIPE_WEBHOOK_SECRET) {
   throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable')
 }
 
-export const SUBSCRIPTION_PRICE_ID = process.env.STRIPE_PRICE_ID
-
-if (!SUBSCRIPTION_PRICE_ID) {
-  throw new Error('Missing STRIPE_PRICE_ID environment variable')
-}
-
-// Subscription tiers and features
+// Subscription tiers and their Stripe Price IDs
 export const SUBSCRIPTION_TIERS = {
-  free: 'free',
-  premium: 'premium'
+  basic: 'basic',
+  pro: 'pro',
+  enterprise: 'enterprise'
 } as const
 
 export type SubscriptionTier = typeof SUBSCRIPTION_TIERS[keyof typeof SUBSCRIPTION_TIERS]
 
-export const SUBSCRIPTION_FEATURES = {
-  [SUBSCRIPTION_TIERS.free]: {
-    ideaGenerations: 3,
-    features: ['Basic business ideas', 'Simple recommendations'] as const
+// Usage limits per tier
+export const USAGE_LIMITS = {
+  [SUBSCRIPTION_TIERS.basic]: {
+    ideaGenerations: 10,
+    savedIdeas: 20,
+    aiQueries: 50
   },
-  [SUBSCRIPTION_TIERS.premium]: {
+  [SUBSCRIPTION_TIERS.pro]: {
+    ideaGenerations: 50,
+    savedIdeas: 100,
+    aiQueries: 250
+  },
+  [SUBSCRIPTION_TIERS.enterprise]: {
     ideaGenerations: -1, // Unlimited
+    savedIdeas: -1, // Unlimited
+    aiQueries: -1 // Unlimited
+  }
+} as const
+
+export const SUBSCRIPTION_FEATURES = {
+  [SUBSCRIPTION_TIERS.basic]: {
     features: [
-      'Unlimited business ideas',
-      'Advanced AI recommendations',
-      'Market insights',
-      'Follow-up questions',
-      'Actionable suggestions',
-      'Priority support'
+      'Basic idea generation',
+      'Simple recommendations',
+      'Standard support',
+      'Basic analytics'
+    ] as const
+  },
+  [SUBSCRIPTION_TIERS.pro]: {
+    features: [
+      'Advanced idea generation',
+      'Detailed recommendations',
+      'Priority support',
+      'Advanced analytics',
+      'Custom branding',
+      'Team collaboration (up to 5)',
+      'API access'
+    ] as const
+  },
+  [SUBSCRIPTION_TIERS.enterprise]: {
+    features: [
+      'Unlimited idea generation',
+      'Custom AI models',
+      'Dedicated support',
+      'Enterprise analytics',
+      'White labeling',
+      'Unlimited team members',
+      'Priority API access',
+      'Custom integrations',
+      'SLA guarantees'
     ] as const
   }
 } as const
 
-// Feature flags for subscription tiers
-export const PREMIUM_FEATURES = [
-  'followUpQuestions',
-  'actionableSuggestions',
-  'marketInsights',
-  'unlimitedIdeas',
-  'prioritySupport'
-] as const
+// Define available features for each tier
+type BasicFeatures = {
+  ideaGeneration: true
+  simpleRecommendations: true
+  basicAnalytics: true
+}
 
-export type PremiumFeature = typeof PREMIUM_FEATURES[number]
+type ProFeatures = BasicFeatures & {
+  advancedGeneration: true
+  detailedRecommendations: true
+  advancedAnalytics: true
+  customBranding: true
+  teamCollaboration: true
+  apiAccess: true
+}
+
+type EnterpriseFeatures = ProFeatures & {
+  unlimitedGeneration: true
+  customAiModels: true
+  whiteLabeling: true
+  unlimitedTeam: true
+  priorityApi: true
+  customIntegrations: true
+  slaGuarantee: true
+}
+
+// Feature flags for subscription tiers
+export const FEATURE_FLAGS: {
+  [SUBSCRIPTION_TIERS.basic]: BasicFeatures
+  [SUBSCRIPTION_TIERS.pro]: ProFeatures
+  [SUBSCRIPTION_TIERS.enterprise]: EnterpriseFeatures
+} = {
+  [SUBSCRIPTION_TIERS.basic]: {
+    ideaGeneration: true,
+    simpleRecommendations: true,
+    basicAnalytics: true
+  },
+  [SUBSCRIPTION_TIERS.pro]: {
+    ideaGeneration: true,
+    simpleRecommendations: true,
+    basicAnalytics: true,
+    advancedGeneration: true,
+    detailedRecommendations: true,
+    advancedAnalytics: true,
+    customBranding: true,
+    teamCollaboration: true,
+    apiAccess: true
+  },
+  [SUBSCRIPTION_TIERS.enterprise]: {
+    ideaGeneration: true,
+    simpleRecommendations: true,
+    basicAnalytics: true,
+    advancedGeneration: true,
+    detailedRecommendations: true,
+    advancedAnalytics: true,
+    customBranding: true,
+    teamCollaboration: true,
+    apiAccess: true,
+    unlimitedGeneration: true,
+    customAiModels: true,
+    whiteLabeling: true,
+    unlimitedTeam: true,
+    priorityApi: true,
+    customIntegrations: true,
+    slaGuarantee: true
+  }
+} as const
+
+export type FeatureFlag = keyof EnterpriseFeatures
 
 // Subscription status types
 export type SubscriptionStatus = 
@@ -7865,29 +13644,42 @@ export const SUBSCRIPTION_EVENTS = {
   CREATED: 'customer.subscription.created',
   UPDATED: 'customer.subscription.updated',
   DELETED: 'customer.subscription.deleted',
-  PAYMENT_FAILED: 'invoice.payment_failed'
+  PAYMENT_FAILED: 'invoice.payment_failed',
+  USAGE_ALERT: 'usage.alert'
 } as const
 
 export type SubscriptionEvent = typeof SUBSCRIPTION_EVENTS[keyof typeof SUBSCRIPTION_EVENTS]
 
-// Helper function to check if an event is a subscription event
+// Grace period configuration (in days)
+export const GRACE_PERIODS = {
+  PAYMENT_FAILURE: 3,
+  USAGE_OVERAGE: 2
+}
+
+// Helper functions
 export function isSubscriptionEvent(event: string): event is SubscriptionEvent {
   return Object.values(SUBSCRIPTION_EVENTS).includes(event as SubscriptionEvent)
 }
 
-// Helper function to check if a feature is premium
-export function isPremiumFeature(feature: string): feature is PremiumFeature {
-  return PREMIUM_FEATURES.includes(feature as PremiumFeature)
+export function isFeatureEnabled(feature: FeatureFlag, tier: SubscriptionTier): boolean {
+  return feature in FEATURE_FLAGS[tier]
 }
 
-// Helper function to get features for a subscription tier
 export function getSubscriptionFeatures(tier: SubscriptionTier) {
   return SUBSCRIPTION_FEATURES[tier].features
 }
 
-// Helper function to get idea generation limit for a subscription tier
-export function getIdeaGenerationLimit(tier: SubscriptionTier) {
-  return SUBSCRIPTION_FEATURES[tier].ideaGenerations
+export function getUsageLimits(tier: SubscriptionTier) {
+  return USAGE_LIMITS[tier]
+}
+
+export function getTierFromPriceId(priceId: string): SubscriptionTier {
+  const priceTierMap: Record<string, SubscriptionTier> = {
+    [process.env.STRIPE_BASIC_PRICE_ID!]: SUBSCRIPTION_TIERS.basic,
+    [process.env.STRIPE_PRO_PRICE_ID!]: SUBSCRIPTION_TIERS.pro,
+    [process.env.STRIPE_ENTERPRISE_PRICE_ID!]: SUBSCRIPTION_TIERS.enterprise
+  }
+  return priceTierMap[priceId] || SUBSCRIPTION_TIERS.basic
 }
 
 ```
@@ -7895,131 +13687,119 @@ export function getIdeaGenerationLimit(tier: SubscriptionTier) {
 # src/lib/stripe/service.ts
 
 ```ts
-import Stripe from 'stripe'
-import { stripe } from './config'
+import { stripe } from './config';
+import {
+  SUBSCRIPTION_TIERS,
+  SubscriptionTier,
+  SubscriptionStatus
+} from './config';
 
-interface CheckoutSession {
-  url: string
-}
-
-interface PortalSession {
-  url: string
-}
-
-interface SubscriptionStatus {
-  id: string
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete'
-  current_period_end: string
-  cancel_at_period_end?: boolean
+interface SubscriptionDetails {
+  id: string;
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  usage?: {
+    ideaGenerations: number;
+    savedIdeas: number;
+    aiQueries: number;
+  };
 }
 
 export const stripeService = {
-  async createCheckoutSession(userId: string): Promise<CheckoutSession> {
-    try {
-      const session = await stripe.checkout.sessions.create({
-        customer_email: userId,
-        line_items: [
-          {
-            price: process.env.STRIPE_PRICE_ID,
-            quantity: 1,
-          },
-        ],
-        mode: 'subscription',
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel`,
-        metadata: {
-          userId,
-        },
-      })
+  getPriceIdForTier(tier: SubscriptionTier): string {
+    const priceIds = {
+      [SUBSCRIPTION_TIERS.basic]: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
+      [SUBSCRIPTION_TIERS.pro]: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+      [SUBSCRIPTION_TIERS.enterprise]: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID
+    };
 
-      if (!session.url) {
-        throw new Error('Failed to create checkout session')
-      }
-
-      return { url: session.url }
-    } catch (error) {
-      console.error('Error creating checkout session:', error)
-      throw new Error('Failed to create checkout session')
+    const priceId = priceIds[tier];
+    if (!priceId) {
+      throw new Error(`No price ID configured for tier: ${tier}`);
     }
+
+    return priceId;
   },
 
-  async createPortalSession(customerId: string): Promise<PortalSession> {
-    try {
-      const session = await stripe.billingPortal.sessions.create({
-        customer: customerId,
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-      })
+  async createCheckoutSession(
+    userId: string,
+    tier: SubscriptionTier = SUBSCRIPTION_TIERS.basic,
+    customFields?: Record<string, any>
+  ) {
+    const priceId = this.getPriceIdForTier(tier);
 
-      return { url: session.url }
-    } catch (error) {
-      console.error('Error creating portal session:', error)
-      throw new Error('Failed to create portal session')
-    }
+    const session = await stripe.checkout.sessions.create({
+      customer: userId,
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel`,
+      metadata: customFields
+    });
+
+    return session;
   },
 
-  async getActiveSubscription(customerId: string): Promise<SubscriptionStatus | null> {
-    try {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        limit: 1,
-      })
-
-      if (!subscriptions.data.length) {
-        return null
-      }
-
-      const subscription = subscriptions.data[0]
-      return {
-        id: subscription.id,
-        status: subscription.status as SubscriptionStatus['status'],
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancel_at_period_end: subscription.cancel_at_period_end,
-      }
-    } catch (error) {
-      console.error('Error fetching subscription:', error)
-      throw new Error('Failed to fetch subscription')
-    }
+  async createPortalSession(userId: string) {
+    return stripe.billingPortal.sessions.create({
+      customer: userId,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+    });
   },
 
-  async constructWebhookEvent(
-    payload: string | Buffer,
-    signature: string,
-    webhookSecret: string
-  ): Promise<Stripe.Event> {
-    try {
-      return stripe.webhooks.constructEvent(
-        payload,
-        signature,
-        webhookSecret
-      )
-    } catch (error) {
-      console.error('Error constructing webhook event:', error)
-      throw new Error('Failed to construct webhook event')
-    }
+  async getSubscriptionDetails(userId: string): Promise<SubscriptionDetails | null> {
+    const subscriptions = await stripe.subscriptions.list({
+      customer: userId,
+      status: 'active',
+      expand: ['data.default_payment_method']
+    });
+
+    if (!subscriptions.data.length) return null;
+
+    const subscription = subscriptions.data[0];
+    const priceId = subscription.items.data[0].price.id;
+    const tier = Object.entries(SUBSCRIPTION_TIERS).find(
+      ([_, id]) => this.getPriceIdForTier(id as SubscriptionTier) === priceId
+    )?.[1] as SubscriptionTier;
+
+    // Get usage metrics from our database
+    const usage = await this.getSubscriptionUsage(userId);
+
+    return {
+      id: subscription.id,
+      tier: tier || SUBSCRIPTION_TIERS.basic,
+      status: subscription.status as SubscriptionStatus,
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      usage
+    };
   },
 
-  async handleSubscriptionChange(
-    subscriptionId: string,
-    customerId: string,
-    status: SubscriptionStatus['status']
-  ): Promise<void> {
-    try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-      
-      if (subscription.customer !== customerId) {
-        throw new Error('Subscription does not belong to customer')
-      }
+  async getSubscriptionUsage(userId: string) {
+    // Implement fetching usage metrics from your database
+    // This is a placeholder implementation
+    return {
+      ideaGenerations: 0,
+      savedIdeas: 0,
+      aiQueries: 0
+    };
+  },
 
-      // Update subscription status in your database
-      // This would typically be handled by your webhook handler
-      console.log(`Subscription ${subscriptionId} status updated to ${status}`)
-    } catch (error) {
-      console.error('Error handling subscription change:', error)
-      throw new Error('Failed to handle subscription change')
-    }
+  async cancelSubscription(subscriptionId: string) {
+    return stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true
+    });
+  },
+
+  async reactivateSubscription(subscriptionId: string) {
+    return stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: false
+    });
   }
-}
+};
 
 ```
 
@@ -8140,6 +13920,240 @@ export interface BusinessRecommendation {
     breakeven: string;
   };
   nextSteps: string[];
+}
+
+```
+
+# src/lib/usage/service.ts
+
+```ts
+import { createClient } from '@supabase/supabase-js'
+import { USAGE_LIMITS, SubscriptionTier } from '@/lib/stripe/config'
+import { stripeService } from '@/lib/stripe/service'
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+interface UsageMetrics {
+  ideaGenerations: number
+  savedIdeas: number
+  aiQueries: number
+}
+
+export const usageService = {
+  async getUserUsage(userId: string): Promise<UsageMetrics> {
+    const { data, error } = await supabase
+      .from('usage_metrics')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching user usage:', error)
+      return { ideaGenerations: 0, savedIdeas: 0, aiQueries: 0 }
+    }
+
+    return {
+      ideaGenerations: data?.idea_generations || 0,
+      savedIdeas: data?.saved_ideas || 0,
+      aiQueries: data?.ai_queries || 0
+    }
+  },
+
+  async resetUsage(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('usage_metrics')
+      .upsert({
+        user_id: userId,
+        idea_generations: 0,
+        saved_ideas: 0,
+        ai_queries: 0,
+        updated_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Error resetting user usage:', error)
+      throw new Error('Failed to reset usage metrics')
+    }
+  },
+
+  async incrementUsage(
+    userId: string,
+    metric: keyof UsageMetrics,
+    subscriptionId?: string
+  ): Promise<boolean> {
+    // Get current subscription details
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('subscription_tier, subscription_status, usage_limits')
+      .eq('user_id', userId)
+      .single()
+
+    if (!profile) {
+      throw new Error('User profile not found')
+    }
+
+    const tier = profile.subscription_tier as SubscriptionTier
+    const limits = USAGE_LIMITS[tier]
+
+    // Get current usage
+    const currentUsage = await this.getUserUsage(userId)
+    const newValue = currentUsage[metric] + 1
+
+    // Check if user has exceeded their limit
+    if (limits[metric] !== -1 && newValue > limits[metric]) {
+      return false
+    }
+
+    // Update usage in database
+    const { error } = await supabase
+      .from('usage_metrics')
+      .upsert({
+        user_id: userId,
+        [metric]: newValue,
+        updated_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Error updating usage metrics:', error)
+      throw new Error('Failed to update usage metrics')
+    }
+
+    // Report usage to Stripe if subscription ID is provided
+    if (subscriptionId) {
+      try {
+        await stripeService.reportUsage(subscriptionId, metric, newValue)
+      } catch (error) {
+        console.error('Error reporting usage to Stripe:', error)
+        // Continue even if Stripe reporting fails
+      }
+    }
+
+    // Check if usage is approaching limit and notify if needed
+    if (limits[metric] !== -1) {
+      const usagePercentage = (newValue / limits[metric]) * 100
+      if (usagePercentage >= 80) {
+        await this.notifyUsageLimit(userId, tier, metric, newValue, limits[metric])
+      }
+    }
+
+    return true
+  },
+
+  async notifyUsageLimit(
+    userId: string,
+    tier: SubscriptionTier,
+    metric: keyof UsageMetrics,
+    currentUsage: number,
+    limit: number
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type: 'usage_limit',
+        title: 'Usage Limit Warning',
+        message: `You've used ${currentUsage} out of ${limit} ${metric}. Consider upgrading your plan for unlimited usage.`,
+        metadata: {
+          tier,
+          metric,
+          currentUsage,
+          limit
+        },
+        created_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Error creating usage notification:', error)
+    }
+  },
+
+  async checkGracePeriod(userId: string): Promise<boolean> {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('payment_failure_grace_period_end, usage_overage_grace_period_end')
+      .eq('user_id', userId)
+      .single()
+
+    if (!profile) {
+      return false
+    }
+
+    const now = new Date()
+    const paymentGracePeriodEnd = profile.payment_failure_grace_period_end
+      ? new Date(profile.payment_failure_grace_period_end)
+      : null
+    const usageGracePeriodEnd = profile.usage_overage_grace_period_end
+      ? new Date(profile.usage_overage_grace_period_end)
+      : null
+
+    return (
+      (paymentGracePeriodEnd !== null && now < paymentGracePeriodEnd) ||
+      (usageGracePeriodEnd !== null && now < usageGracePeriodEnd)
+    )
+  },
+
+  async getUsageAnalytics(userId: string): Promise<{
+    current: UsageMetrics
+    limits: typeof USAGE_LIMITS[SubscriptionTier]
+    history: Array<{ date: string } & UsageMetrics>
+  }> {
+    // Get current usage and limits
+    const [currentUsage, profile] = await Promise.all([
+      this.getUserUsage(userId),
+      supabase
+        .from('user_profiles')
+        .select('subscription_tier')
+        .eq('user_id', userId)
+        .single()
+    ])
+
+    if (!profile.data) {
+      throw new Error('User profile not found')
+    }
+
+    const tier = profile.data.subscription_tier as SubscriptionTier
+    const limits = USAGE_LIMITS[tier]
+
+    // Get usage history
+    const { data: history, error } = await supabase
+      .from('usage_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(30)
+
+    if (error) {
+      console.error('Error fetching usage history:', error)
+      throw new Error('Failed to fetch usage history')
+    }
+
+    return {
+      current: currentUsage,
+      limits,
+      history: history.map(record => ({
+        date: record.date,
+        ideaGenerations: record.idea_generations,
+        savedIdeas: record.saved_ideas,
+        aiQueries: record.ai_queries
+      }))
+    }
+  }
+}
+
+```
+
+# src/lib/utils.ts
+
+```ts
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 
 ```
@@ -8353,197 +14367,554 @@ export function cn(...inputs: ClassValue[]) {
 
 ```
 
-# src/lib/utils/sanitize.ts
+# src/lib/utils/rate-limiter.ts
 
 ```ts
-import { z } from 'zod'
+import Redis from 'ioredis';
+import { logger } from '../monitoring';
 
-/**
- * Sanitizes strings by removing potentially dangerous content
- * @param input - String to sanitize
- */
-export function sanitizeString(input: string): string {
-  if (!input) return ''
-  
-  return input
-    // Remove script tags and their contents
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    // Convert special characters to HTML entities
-    .replace(/[&<>"']/g, (match) => {
-      const entities: { [key: string]: string } = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;'
-      }
-      return entities[match]
-    })
-    // Remove other potentially dangerous HTML tags
-    .replace(/<(.*?)>/g, '')
-    // Remove null characters
-    .replace(/\0/g, '')
-    // Normalize whitespace
-    .trim()
+interface RateLimitConfig {
+  points?: number;        // Number of requests allowed
+  duration?: number;      // Time window in seconds
+  blockDuration?: number; // Duration to block if limit exceeded (seconds)
+  prefix?: string;       // Redis key prefix
 }
 
-/**
- * Sanitizes an object's string properties recursively
- * @param obj - Object to sanitize
- */
-export function sanitizeObject<T extends object>(obj: T): T {
-  const sanitized: any = {}
-  
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string') {
-      sanitized[key] = sanitizeString(value)
-    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-      sanitized[key] = sanitizeObject(value)
-    } else if (Array.isArray(value)) {
-      sanitized[key] = value.map(item => 
-        typeof item === 'string' ? sanitizeString(item) : 
-        item && typeof item === 'object' ? sanitizeObject(item) : 
-        item
-      )
-    } else {
-      sanitized[key] = value
-    }
+interface RateLimitInfo {
+  remaining: number;     // Remaining points in current window
+  reset: number;        // Timestamp when points reset
+  blocked: boolean;     // Whether requester is currently blocked
+}
+
+export class RateLimiter {
+  private redis: Redis;
+  private points: number;
+  private duration: number;
+  private blockDuration: number;
+  private prefix: string;
+
+  constructor(config: RateLimitConfig = {}) {
+    const {
+      points = 10,
+      duration = 60,
+      blockDuration = 600,
+      prefix = 'ai:ratelimit:'
+    } = config;
+
+    this.redis = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      retryStrategy: (times: number) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      }
+    });
+
+    this.points = points;
+    this.duration = duration;
+    this.blockDuration = blockDuration;
+    this.prefix = prefix;
+
+    this.redis.on('error', (error: Error) => {
+      logger.error('Redis rate limiter error:', error);
+    });
   }
-  
-  return sanitized as T
-}
 
-/**
- * Creates a sanitized Zod schema for string validation
- * @param schema - Base Zod string schema
- */
-export function createSanitizedStringSchema(schema: z.ZodString = z.string()) {
-  return schema.transform(sanitizeString)
-}
+  private getPointsKey(id: string): string {
+    return `${this.prefix}${id}:points`;
+  }
 
-/**
- * Example usage of sanitized schema:
- * 
- * const UserSchema = z.object({
- *   name: createSanitizedStringSchema(z.string().min(2)),
- *   email: createSanitizedStringSchema(z.string().email()),
- *   bio: createSanitizedStringSchema(z.string().max(500).optional())
- * })
- */
+  private getBlockKey(id: string): string {
+    return `${this.prefix}${id}:blocked`;
+  }
 
-export type SanitizedRequest<T> = {
-  body: T;
-  query: { [key: string]: string };
-  headers: { [key: string]: string };
-}
+  async isBlocked(id: string): Promise<boolean> {
+    const blocked = await this.redis.get(this.getBlockKey(id));
+    return !!blocked;
+  }
 
-/**
- * Middleware function to sanitize incoming request data
- * @param schema - Zod schema for request validation
- */
-export function withSanitization<T>(schema: z.ZodType<T>) {
-  return async (req: Request): Promise<SanitizedRequest<T>> => {
-    let body = {}
+  async getRateLimit(id: string): Promise<RateLimitInfo> {
+    const [pointsStr, blocked] = await Promise.all([
+      this.redis.get(this.getPointsKey(id)),
+      this.isBlocked(id)
+    ]);
+
+    const points = pointsStr ? parseInt(pointsStr) : this.points;
+    const ttl = await this.redis.ttl(this.getPointsKey(id));
     
-    // Parse and sanitize body if present
-    if (req.body) {
-      const contentType = req.headers.get('content-type')
-      if (contentType?.includes('application/json')) {
-        body = await req.json()
-      }
-    }
-
-    // Get and sanitize query parameters
-    const url = new URL(req.url)
-    const query: { [key: string]: string } = {}
-    url.searchParams.forEach((value, key) => {
-      query[key] = sanitizeString(value)
-    })
-
-    // Get and sanitize headers
-    const headers: { [key: string]: string } = {}
-    req.headers.forEach((value, key) => {
-      headers[key] = sanitizeString(value)
-    })
-
-    // Validate and sanitize body using provided schema
-    const sanitizedBody = schema.parse(body)
-
     return {
-      body: sanitizedBody,
-      query,
-      headers
+      remaining: Math.max(0, points),
+      reset: Date.now() + (ttl >= 0 ? ttl * 1000 : this.duration * 1000),
+      blocked
+    };
+  }
+
+  async consume(id: string): Promise<RateLimitInfo> {
+    const blocked = await this.isBlocked(id);
+    if (blocked) {
+      throw new Error('Rate limit exceeded - currently blocked');
     }
+
+    const pointsKey = this.getPointsKey(id);
+    const points = await this.redis.get(pointsKey);
+
+    if (!points) {
+      // First request in window
+      await this.redis.setex(pointsKey, this.duration, this.points - 1);
+      return this.getRateLimit(id);
+    }
+
+    const remaining = parseInt(points);
+    if (remaining <= 0) {
+      // Block the requester
+      await this.redis.setex(this.getBlockKey(id), this.blockDuration, '1');
+      throw new Error('Rate limit exceeded');
+    }
+
+    // Consume a point
+    await this.redis.decrby(pointsKey, 1);
+    return this.getRateLimit(id);
+  }
+
+  async reset(id: string): Promise<void> {
+    await Promise.all([
+      this.redis.del(this.getPointsKey(id)),
+      this.redis.del(this.getBlockKey(id))
+    ]);
+  }
+
+  async close(): Promise<void> {
+    await this.redis.quit();
+  }
+}
+
+// Export a singleton instance with default configuration
+export const rateLimiter = new RateLimiter();
+
+// Export error types for better error handling
+export class RateLimitError extends Error {
+  constructor(message: string, public readonly retryAfter: number) {
+    super(message);
+    this.name = 'RateLimitError';
   }
 }
 
 ```
 
-# src/middleware.ts
+# src/lib/utils/redis-cache.ts
 
 ```ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { logError, ErrorSeverity, trackEvent } from '@/lib/monitoring';
+import Redis from 'ioredis';
+import { logger } from '../monitoring';
 
-export async function middleware(request: NextRequest) {
-  const startTime = Date.now();
-  const requestId = crypto.randomUUID();
+interface CacheConfig {
+  host?: string;
+  port?: number;
+  password?: string;
+  ttl?: number; // Time to live in seconds
+  prefix?: string;
+}
 
-  try {
-    // Continue to the API route
-    const response = await NextResponse.next();
+interface CacheMetrics {
+  hits: number;
+  misses: number;
+  errors: number;
+}
 
-    // Track API performance
-    const duration = Date.now() - startTime;
-    trackEvent('api_request', {
-      path: request.nextUrl.pathname,
-      method: request.method,
-      status: response.status,
-      duration,
-      requestId,
+export class RedisCache {
+  private redis: Redis;
+  private ttl: number;
+  private prefix: string;
+  private metrics: CacheMetrics = {
+    hits: 0,
+    misses: 0,
+    errors: 0,
+  };
+
+  constructor(config: CacheConfig = {}) {
+    const {
+      host = process.env.REDIS_HOST || 'localhost',
+      port = parseInt(process.env.REDIS_PORT || '6379'),
+      password = process.env.REDIS_PASSWORD,
+      ttl = 3600, // 1 hour default
+      prefix = 'ai:cache:',
+    } = config;
+
+    this.redis = new Redis({
+      host,
+      port,
+      password,
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
     });
 
-    // Track slow requests (over 1 second)
-    if (duration > 1000) {
-      trackEvent('slow_api_request', {
-        path: request.nextUrl.pathname,
-        method: request.method,
-        duration,
-        requestId,
-      });
+    this.ttl = ttl;
+    this.prefix = prefix;
+
+    this.redis.on('error', (error) => {
+      logger.error('Redis cache error:', error);
+      this.metrics.errors++;
+    });
+  }
+
+  private getKey(key: string): string {
+    return `${this.prefix}${key}`;
+  }
+
+  async set(key: string, value: string, ttl?: number): Promise<void> {
+    const cacheKey = this.getKey(key);
+    try {
+      if (ttl) {
+        await this.redis.setex(cacheKey, ttl, value);
+      } else {
+        await this.redis.setex(cacheKey, this.ttl, value);
+      }
+    } catch (error) {
+      logger.error('Error setting cache:', error);
+      this.metrics.errors++;
     }
+  }
 
-    return response;
-  } catch (error) {
-    // Log API errors
-    logError(error as Error, ErrorSeverity.ERROR, {
-      path: request.nextUrl.pathname,
-      method: request.method,
-      requestId,
-    });
+  async get(key: string): Promise<string | null> {
+    const cacheKey = this.getKey(key);
+    try {
+      const value = await this.redis.get(cacheKey);
+      if (value) {
+        this.metrics.hits++;
+        return value;
+      }
+      this.metrics.misses++;
+      return null;
+    } catch (error) {
+      logger.error('Error getting cache:', error);
+      this.metrics.errors++;
+      return null;
+    }
+  }
 
-    // Track API errors
-    trackEvent('api_error', {
-      path: request.nextUrl.pathname,
-      method: request.method,
-      error: (error as Error).message,
-      requestId,
-    });
+  async delete(key: string): Promise<void> {
+    const cacheKey = this.getKey(key);
+    try {
+      await this.redis.del(cacheKey);
+    } catch (error) {
+      logger.error('Error deleting cache:', error);
+      this.metrics.errors++;
+    }
+  }
 
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        message: 'Internal Server Error',
-      }),
-      { status: 500 }
-    );
+  async clear(): Promise<void> {
+    try {
+      const keys = await this.redis.keys(`${this.prefix}*`);
+      if (keys.length > 0) {
+        await this.redis.del(...keys);
+      }
+    } catch (error) {
+      logger.error('Error clearing cache:', error);
+      this.metrics.errors++;
+    }
+  }
+
+  async getMetrics(): Promise<CacheMetrics> {
+    return { ...this.metrics };
+  }
+
+  async close(): Promise<void> {
+    await this.redis.quit();
   }
 }
 
-// Configure the middleware to run only for API routes
+// Export a singleton instance with default configuration
+export const redisCache = new RedisCache();
+
+```
+
+# src/lib/utils/sanitize.ts
+
+```ts
+import { z } from 'zod';
+import { ErrorLog, PerformanceMetric, AnalyticsEvent } from '@/lib/monitoring/types';
+
+export function sanitizeString(input: string): string {
+  if (!input) return '';
+  
+  return input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/[&<>"']/g, (match) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;'
+    }[match] || ''))
+    .replace(/<(.*?)>/g, '')
+    .replace(/\0/g, '')
+    .trim();
+}
+
+export function sanitizeObject<T extends object>(obj: T): T {
+  const sanitized: any = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string') {
+      sanitized[key] = sanitizeString(value);
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      sanitized[key] = sanitizeObject(value);
+    } else if (Array.isArray(value)) {
+      sanitized[key] = value.map(item => 
+        typeof item === 'string' ? sanitizeString(item) : 
+        item && typeof item === 'object' ? sanitizeObject(item) : 
+        item
+      );
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  
+  return sanitized as T;
+}
+
+export function sanitizeError(error: Error): Partial<Error> {
+  return {
+    name: sanitizeString(error.name),
+    message: sanitizeString(error.message),
+    stack: process.env.NODE_ENV === 'development' ? sanitizeString(error.stack || '') : undefined
+  };
+}
+
+export function createSanitizedStringSchema(schema: z.ZodString = z.string()) {
+  return schema.transform(sanitizeString);
+}
+
+export function sanitizeMonitoringData<T extends ErrorLog | PerformanceMetric | AnalyticsEvent>(data: T): T {
+  return sanitizeObject(data);
+}
+
+export type SanitizedRequest<T> = {
+  body: T;
+  query: Record<string, string>;
+  headers: Record<string, string>;
+}
+
+export function withSanitization<T>(schema: z.ZodType<T>) {
+  return async (req: Request): Promise<SanitizedRequest<T>> => {
+    const body = req.headers.get('content-type')?.includes('application/json') 
+      ? await req.json()
+      : {};
+
+    const url = new URL(req.url);
+    const query: Record<string, string> = {};
+    url.searchParams.forEach((value, key) => {
+      query[key] = sanitizeString(value);
+    });
+
+    const headers: Record<string, string> = {};
+    req.headers.forEach((value, key) => {
+      headers[key] = sanitizeString(value);
+    });
+
+    const sanitizedBody = schema.parse(sanitizeObject(body));
+
+    return { body: sanitizedBody, query, headers };
+  };
+}
+```
+
+# src/middleware.ts
+
+```ts
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import type { Database } from './types/database';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis for rate limiting
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(20, '5 s'),
+});
+
+const PROTECTED_ROUTES = ['/dashboard', '/questionnaire', '/payment', '/api/ai', '/api/questionnaire', '/api/recommendations'];
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/pricing', '/password-reset'];
+
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://startupspark.com',
+  'https://app.startupspark.com',
+  'http://localhost:3000',
+];
+
+// Enhanced security headers
+const securityHeaders = {
+  'X-DNS-Prefetch-Control': 'on',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'origin-when-cross-origin',
+  'X-Permitted-Cross-Domain-Policies': 'none',
+  'X-XSS-Protection': '1; mode=block',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.openai.com https://*.supabase.co https://api.stripe.com;",
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+};
+
+// Track request metrics
+async function trackRequestMetrics(req: NextRequest, startTime: number) {
+  try {
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    const path = req.nextUrl.pathname;
+    
+    await fetch('/api/monitoring/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path,
+        duration,
+        method: req.method,
+        timestamp: new Date().toISOString()
+      })
+    });
+  } catch (error) {
+    console.error('Failed to track metrics:', error);
+  }
+}
+
+export async function middleware(req: NextRequest) {
+  const startTime = Date.now();
+
+  // CORS handling
+  const origin = req.headers.get('origin');
+  const res = NextResponse.next();
+  
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      res.headers.set('Access-Control-Allow-Origin', origin);
+    }
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.headers.set('Access-Control-Max-Age', '86400');
+  }
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res;
+  }
+
+  // Rate limiting for API routes with different limits for authenticated users
+  if (req.nextUrl.pathname.startsWith('/api/')) {
+    const forwarded = req.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';
+    const authHeader = req.headers.get('authorization');
+    
+    // More lenient rate limit for authenticated users
+    const limit = authHeader ? 50 : 20;
+    const window = authHeader ? '10 s' : '5 s';
+    
+    const rateLimiter = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(limit, window),
+    });
+
+    const { success } = await rateLimiter.limit(`${ip}:${authHeader ? 'auth' : 'unauth'}`);
+    
+    if (!success) {
+      const retryAfter = 60; // Default retry after 60 seconds
+      return new NextResponse(
+        JSON.stringify({ 
+          error: 'Too many requests',
+          retryAfter
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Retry-After': String(retryAfter)
+          } 
+        }
+      );
+    }
+  }
+
+  const supabase = createMiddlewareClient<Database>({ req, res });
+
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error('Auth error:', error);
+    await trackRequestMetrics(req, startTime);
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+
+  const path = req.nextUrl.pathname;
+
+  // Handle public routes
+  if (PUBLIC_ROUTES.some(route => path.startsWith(route))) {
+    const response = addSecurityHeaders(res);
+    await trackRequestMetrics(req, startTime);
+    return response;
+  }
+
+  // Handle protected routes
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => path.startsWith(route));
+  if (isProtectedRoute) {
+    if (!session) {
+      const redirectUrl = new URL('/login', req.url);
+      redirectUrl.searchParams.set('redirectTo', path);
+      await trackRequestMetrics(req, startTime);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Additional checks for premium API routes
+    if (path.startsWith('/api/ai') || path.startsWith('/api/recommendations')) {
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('subscription_status, subscription_tier')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (!profile || profile.subscription_status !== 'active') {
+          await trackRequestMetrics(req, startTime);
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Subscription required',
+              message: 'Active subscription required',
+            }),
+            { status: 403, headers: { ...securityHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (error) {
+        console.error('Subscription check error:', error);
+        await trackRequestMetrics(req, startTime);
+        return new NextResponse(
+          JSON.stringify({ error: 'Internal server error' }),
+          { status: 500, headers: { ...securityHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+  }
+
+  const response = addSecurityHeaders(NextResponse.next({ request: { headers: req.headers } }));
+  await trackRequestMetrics(req, startTime);
+  return response;
+}
+
+function addSecurityHeaders(res: NextResponse) {
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    res.headers.set(key, value);
+  });
+  return res;
+}
+
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)',],
 };
 
 ```
@@ -8557,106 +14928,305 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export interface Database {
   public: {
     Tables: {
       questionnaire_responses: {
         Row: {
-          id: string
-          user_id: string
-          experience: string
-          interests: string
-          commitment: string
-          resources: string
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          user_id: string;
+          experience: string;
+          interests: string;
+          commitment: string;
+          resources: string;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          user_id: string
-          experience: string
-          interests: string
-          commitment: string
-          resources: string
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          user_id: string;
+          experience: string;
+          interests: string;
+          commitment: string;
+          resources: string;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          user_id?: string
-          experience?: string
-          interests?: string
-          commitment?: string
-          resources?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
+          id?: string;
+          user_id?: string;
+          experience?: string;
+          interests?: string;
+          commitment?: string;
+          resources?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       user_profiles: {
         Row: {
-          id: string
-          user_id: string
-          has_completed_questionnaire: boolean
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          user_id: string;
+          has_completed_questionnaire: boolean;
+          stripe_customer_id: string | null;
+          subscription_tier: 'free' | 'premium';
+          subscription_status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete';
+          subscription_period_start: string | null;
+          subscription_period_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          user_id: string
-          has_completed_questionnaire?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          user_id: string;
+          has_completed_questionnaire?: boolean;
+          stripe_customer_id?: string | null;
+          subscription_tier?: 'free' | 'premium';
+          subscription_status?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete';
+          subscription_period_start?: string | null;
+          subscription_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          user_id?: string
-          has_completed_questionnaire?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
+          id?: string;
+          user_id?: string;
+          has_completed_questionnaire?: boolean;
+          stripe_customer_id?: string | null;
+          subscription_tier?: 'free' | 'premium';
+          subscription_status?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete';
+          subscription_period_start?: string | null;
+          subscription_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       saved_recommendations: {
         Row: {
-          id: string
-          user_id: string
-          recommendation_type: string
-          content: string
-          notes: string | null
-          is_favorite: boolean
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          user_id: string;
+          recommendation_type: 'business_idea' | 'follow_up' | 'suggestion' | 'insight';
+          content: string;
+          notes: string | null;
+          is_favorite: boolean;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          user_id: string
-          recommendation_type: string
-          content: string
-          notes?: string | null
-          is_favorite?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          user_id: string;
+          recommendation_type: 'business_idea' | 'follow_up' | 'suggestion' | 'insight';
+          content: string;
+          notes?: string | null;
+          is_favorite?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          user_id?: string
-          recommendation_type?: string
-          content?: string
-          notes?: string | null
-          is_favorite?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
-    }
+          id?: string;
+          user_id?: string;
+          recommendation_type?: 'business_idea' | 'follow_up' | 'suggestion' | 'insight';
+          content?: string;
+          notes?: string | null;
+          is_favorite?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      subscription_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          stripe_subscription_id: string;
+          status: string;
+          tier: string;
+          period_start: string;
+          period_end: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          stripe_subscription_id: string;
+          status: string;
+          tier: string;
+          period_start: string;
+          period_end: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          stripe_subscription_id?: string;
+          status?: string;
+          tier?: string;
+          period_start?: string;
+          period_end?: string;
+          created_at?: string;
+        };
+      };
+      usage_tracking: {
+        Row: {
+          id: string;
+          user_id: string;
+          feature_name: string;
+          usage_count: number;
+          period_start: string;
+          period_end: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          feature_name: string;
+          usage_count?: number;
+          period_start: string;
+          period_end: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          feature_name?: string;
+          usage_count?: number;
+          period_start?: string;
+          period_end?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      analytics_events: {
+        Row: {
+          id: string;
+          timestamp: string;
+          event: string;
+          properties: Json;
+          user_id: string | null;
+          session_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          timestamp: string;
+          event: string;
+          properties: Json;
+          user_id?: string | null;
+          session_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          timestamp?: string;
+          event?: string;
+          properties?: Json;
+          user_id?: string | null;
+          session_id?: string | null;
+          created_at?: string;
+        };
+      };
+      request_metrics: {
+        Row: {
+          id: string;
+          path: string;
+          method: string;
+          duration: number;
+          timestamp: string;
+          status_code: number | null;
+          user_agent: string | null;
+          ip: string | null;
+          country: string | null;
+          authenticated: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          path: string;
+          method: string;
+          duration: number;
+          timestamp: string;
+          status_code?: number | null;
+          user_agent?: string | null;
+          ip?: string | null;
+          country?: string | null;
+          authenticated?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          path?: string;
+          method?: string;
+          duration?: number;
+          timestamp?: string;
+          status_code?: number | null;
+          user_agent?: string | null;
+          ip?: string | null;
+          country?: string | null;
+          authenticated?: boolean;
+          created_at?: string;
+        };
+      };
+      error_logs: {
+        Row: {
+          id: string;
+          severity: 'info' | 'warning' | 'error' | 'critical';
+          error_name: string;
+          error_message: string;
+          error_stack: string | null;
+          context: Json;
+          timestamp: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          severity: 'info' | 'warning' | 'error' | 'critical';
+          error_name: string;
+          error_message: string;
+          error_stack?: string | null;
+          context: Json;
+          timestamp: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          severity?: 'info' | 'warning' | 'error' | 'critical';
+          error_name?: string;
+          error_message?: string;
+          error_stack?: string | null;
+          context?: Json;
+          timestamp?: string;
+          created_at?: string;
+        };
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      handle_new_user: {
+        Args: Record<PropertyKey, never>;
+        Returns: unknown;
+      };
+      update_subscription_status: {
+        Args: Record<PropertyKey, never>;
+        Returns: unknown;
+      };
+      increment_feature_usage: {
+        Args: {
+          p_user_id: string;
+          p_feature_name: string;
+        };
+        Returns: void;
+      };
+    };
     Enums: {
+      [_ in never]: never;
+    };
+  };
+}
 
 ```
 
@@ -8690,14 +15260,20 @@ export {}
 ├── README.md
 ├── codebase.md
 ├── docs
+│   ├── api-documentation.md
 │   ├── codebaseSummary.md
 │   ├── critical-path-tests.md
 │   ├── currentTask.md
+│   ├── deployment-guide.md
 │   ├── implementationGuide.md
 │   ├── projectRoadmap.md
 │   ├── quickStart.md
+│   ├── stripe-setup-guide.md
+│   ├── supabase-schema-updated.sql
 │   ├── supabase-schema.sql
-│   └── techStack.md
+│   ├── techStack.md
+│   ├── usage-tracking.sql
+│   └── user-manual.md
 ├── jest.config.js
 ├── jest.setup.js
 ├── next-env.d.ts
@@ -8711,6 +15287,7 @@ export {}
 │   ├── next.svg
 │   ├── vercel.svg
 │   └── window.svg
+├── setup-database.sql
 ├── src
 │   ├── __tests__
 │   │   ├── api
@@ -8724,6 +15301,8 @@ export {}
 │   ├── app
 │   │   ├── (auth)
 │   │   │   ├── login
+│   │   │   │   └── page.tsx
+│   │   │   ├── password-reset
 │   │   │   │   └── page.tsx
 │   │   │   └── signup
 │   │   │       └── page.tsx
@@ -8782,7 +15361,10 @@ export {}
 │   │   ├── auth
 │   │   │   └── AuthProviderWrapper.tsx
 │   │   ├── dashboard
-│   │   │   └── SavedRecommendations.tsx
+│   │   │   ├── SavedRecommendations.tsx
+│   │   │   ├── export-features.tsx
+│   │   │   ├── profile-settings.tsx
+│   │   │   └── usage-statistics.tsx
 │   │   ├── debug
 │   │   │   └── DebugPanel.tsx
 │   │   ├── error
@@ -8825,6 +15407,8 @@ export {}
 │   │   │   └── config.ts
 │   │   ├── types
 │   │   │   └── questionnaire.ts
+│   │   ├── usage
+│   │   │   └── service.ts
 │   │   └── utils
 │   │       ├── api-error.ts
 │   │       ├── cache.ts
@@ -8839,7 +15423,7 @@ export {}
 ├── tailwind.config.ts
 └── tsconfig.json
 
-59 directories, 92 files
+61 directories, 104 files
 
 ```
 
@@ -8877,21 +15461,23 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#6366F1",
-          foreground: "#FFFFFF",
-          100: "#E0E7FF",
-          500: "#6366F1",
-          600: "#4F46E5"
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          100: "hsl(215 25% 90%)",
+          500: "hsl(215 25% 27%)",
+          600: "hsl(215 25% 20%)"
         },
         accent: {
-          DEFAULT: "#EC4899",
-          foreground: "#FFFFFF",
-          100: "#FCE7F3",
-          500: "#EC4899"
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+          100: "hsl(200 13% 90%)",
+          500: "hsl(200 13% 45%)"
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          100: "hsl(217 19% 90%)",
+          500: "hsl(217 19% 27%)"
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",

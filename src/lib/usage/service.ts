@@ -1,150 +1,216 @@
 import { createClient } from '@supabase/supabase-js'
-import { stripe } from '../stripe/config'
-import { Database } from '@/types/database'
+import { USAGE_LIMITS, SubscriptionTier } from '@/lib/stripe/config'
+import { stripeService } from '@/lib/stripe/service'
 
-// Initialize Supabase client with service role for admin access
-const supabase = createClient<Database>(
+// Initialize Supabase client
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-type FeatureName = 'idea_generations' | 'market_insights' | 'follow_up_questions'
-
-interface UsageRecord {
-  feature_name: string
-  usage_count: number
+interface UsageMetrics {
+  ideaGenerations: number
+  savedIdeas: number
+  aiQueries: number
 }
 
 export const usageService = {
-  async trackFeatureUsage(userId: string, featureName: FeatureName): Promise<boolean> {
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('subscription_tier, subscription_status')
-        .eq('user_id', userId)
-        .single()
+  async getUserUsage(userId: string): Promise<UsageMetrics> {
+    const { data, error } = await supabase
+      .from('usage_metrics')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
 
-      if (profileError) throw profileError
-
-      // Check if subscription is active
-      if (profile.subscription_status !== 'active') {
-        throw new Error('Subscription not active')
-      }
-
-      // Call the increment_feature_usage function
-      const { error } = await supabase.rpc('increment_feature_usage', {
-        p_user_id: userId,
-        p_feature_name: featureName
-      })
-
-      if (error) {
-        if (error.message.includes('Usage limit exceeded')) {
-          return false
-        }
-        throw error
-      }
-
-      return true
-    } catch (error) {
-      console.error('Error tracking feature usage:', error)
-      return false
+    if (error) {
+      console.error('Error fetching user usage:', error)
+      return { ideaGenerations: 0, savedIdeas: 0, aiQueries: 0 }
     }
-  },
 
-  async getCurrentUsage(userId: string): Promise<Record<FeatureName, number>> {
-    try {
-      const { data, error } = await supabase
-        .from('usage_tracking')
-        .select('feature_name, usage_count')
-        .eq('user_id', userId)
-        .gte('period_end', new Date().toISOString())
-        .lte('period_start', new Date().toISOString())
-
-      if (error) throw error
-
-      return (data as UsageRecord[]).reduce((acc, curr) => ({
-        ...acc,
-        [curr.feature_name]: curr.usage_count
-      }), {} as Record<FeatureName, number>)
-    } catch (error) {
-      console.error('Error fetching current usage:', error)
-      return {
-        idea_generations: 0,
-        market_insights: 0,
-        follow_up_questions: 0
-      }
+    return {
+      ideaGenerations: data?.idea_generations || 0,
+      savedIdeas: data?.saved_ideas || 0,
+      aiQueries: data?.ai_queries || 0
     }
   },
 
   async resetUsage(userId: string): Promise<void> {
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('subscription_period_start, subscription_period_end')
-        .eq('user_id', userId)
-        .single()
+    const { error } = await supabase
+      .from('usage_metrics')
+      .upsert({
+        user_id: userId,
+        idea_generations: 0,
+        saved_ideas: 0,
+        ai_queries: 0,
+        updated_at: new Date().toISOString()
+      })
 
-      if (profileError) throw profileError
-
-      if (!profile.subscription_period_start || !profile.subscription_period_end) {
-        throw new Error('Invalid subscription period')
-      }
-
-      // Reset usage counts for the new period
-      const features: FeatureName[] = ['idea_generations', 'market_insights', 'follow_up_questions']
-      
-      for (const feature of features) {
-        await supabase
-          .from('usage_tracking')
-          .upsert({
-            user_id: userId,
-            feature_name: feature,
-            usage_count: 0,
-            period_start: profile.subscription_period_start,
-            period_end: profile.subscription_period_end
-          })
-      }
-    } catch (error) {
-      console.error('Error resetting usage:', error)
-      throw error
+    if (error) {
+      console.error('Error resetting user usage:', error)
+      throw new Error('Failed to reset usage metrics')
     }
   },
 
-  async reportUsageToStripe(userId: string, featureName: FeatureName): Promise<void> {
-    try {
-      const { data: profile, error: profileError } = await supabase
+  async incrementUsage(
+    userId: string,
+    metric: keyof UsageMetrics,
+    subscriptionId?: string
+  ): Promise<boolean> {
+    // Get current subscription details
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('subscription_tier, subscription_status, usage_limits')
+      .eq('user_id', userId)
+      .single()
+
+    if (!profile) {
+      throw new Error('User profile not found')
+    }
+
+    const tier = profile.subscription_tier as SubscriptionTier
+    const limits = USAGE_LIMITS[tier]
+
+    // Get current usage
+    const currentUsage = await this.getUserUsage(userId)
+    const newValue = currentUsage[metric] + 1
+
+    // Check if user has exceeded their limit
+    if (limits[metric] !== -1 && newValue > limits[metric]) {
+      return false
+    }
+
+    // Update usage in database
+    const { error } = await supabase
+      .from('usage_metrics')
+      .upsert({
+        user_id: userId,
+        [metric]: newValue,
+        updated_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Error updating usage metrics:', error)
+      throw new Error('Failed to update usage metrics')
+    }
+
+    // Report usage to Stripe if subscription ID is provided
+    if (subscriptionId) {
+      try {
+        await stripeService.reportUsage(subscriptionId, metric, newValue)
+      } catch (error) {
+        console.error('Error reporting usage to Stripe:', error)
+        // Continue even if Stripe reporting fails
+      }
+    }
+
+    // Check if usage is approaching limit and notify if needed
+    if (limits[metric] !== -1) {
+      const usagePercentage = (newValue / limits[metric]) * 100
+      if (usagePercentage >= 80) {
+        await this.notifyUsageLimit(userId, tier, metric, newValue, limits[metric])
+      }
+    }
+
+    return true
+  },
+
+  async notifyUsageLimit(
+    userId: string,
+    tier: SubscriptionTier,
+    metric: keyof UsageMetrics,
+    currentUsage: number,
+    limit: number
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type: 'usage_limit',
+        title: 'Usage Limit Warning',
+        message: `You've used ${currentUsage} out of ${limit} ${metric}. Consider upgrading your plan for unlimited usage.`,
+        metadata: {
+          tier,
+          metric,
+          currentUsage,
+          limit
+        },
+        created_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Error creating usage notification:', error)
+    }
+  },
+
+  async checkGracePeriod(userId: string): Promise<boolean> {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('payment_failure_grace_period_end, usage_overage_grace_period_end')
+      .eq('user_id', userId)
+      .single()
+
+    if (!profile) {
+      return false
+    }
+
+    const now = new Date()
+    const paymentGracePeriodEnd = profile.payment_failure_grace_period_end
+      ? new Date(profile.payment_failure_grace_period_end)
+      : null
+    const usageGracePeriodEnd = profile.usage_overage_grace_period_end
+      ? new Date(profile.usage_overage_grace_period_end)
+      : null
+
+    return (
+      (paymentGracePeriodEnd !== null && now < paymentGracePeriodEnd) ||
+      (usageGracePeriodEnd !== null && now < usageGracePeriodEnd)
+    )
+  },
+
+  async getUsageAnalytics(userId: string): Promise<{
+    current: UsageMetrics
+    limits: typeof USAGE_LIMITS[SubscriptionTier]
+    history: Array<{ date: string } & UsageMetrics>
+  }> {
+    // Get current usage and limits
+    const [currentUsage, profile] = await Promise.all([
+      this.getUserUsage(userId),
+      supabase
         .from('user_profiles')
-        .select('stripe_customer_id, subscription_tier')
+        .select('subscription_tier')
         .eq('user_id', userId)
         .single()
+    ])
 
-      if (profileError) throw profileError
+    if (!profile.data) {
+      throw new Error('User profile not found')
+    }
 
-      // Only report usage for premium features
-      if (profile.subscription_tier === 'premium' && profile.stripe_customer_id) {
-        const subscriptions = await stripe.subscriptions.list({
-          customer: profile.stripe_customer_id,
-          status: 'active',
-          limit: 1
-        })
+    const tier = profile.data.subscription_tier as SubscriptionTier
+    const limits = USAGE_LIMITS[tier]
 
-        if (subscriptions.data.length > 0) {
-          const subscription = subscriptions.data[0]
-          const item = subscription.items.data[0]
+    // Get usage history
+    const { data: history, error } = await supabase
+      .from('usage_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(30)
 
-          await stripe.subscriptionItems.createUsageRecord(
-            item.id,
-            {
-              quantity: 1,
-              timestamp: Math.floor(Date.now() / 1000),
-              action: 'increment'
-            }
-          )
-        }
-      }
-    } catch (error) {
-      console.error('Error reporting usage to Stripe:', error)
-      throw error
+    if (error) {
+      console.error('Error fetching usage history:', error)
+      throw new Error('Failed to fetch usage history')
+    }
+
+    return {
+      current: currentUsage,
+      limits,
+      history: history.map(record => ({
+        date: record.date,
+        ideaGenerations: record.idea_generations,
+        savedIdeas: record.saved_ideas,
+        aiQueries: record.ai_queries
+      }))
     }
   }
 }

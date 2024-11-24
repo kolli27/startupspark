@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import { Alert } from '../ui/alert';
-import { Question, QuestionnaireProgress, getNextQuestionId, calculateProgress } from '../../lib/questionnaire/questions';
+import { Question, QuestionnaireProgress, questions } from '../../lib/questionnaire/questions';
+import { TypingIndicator } from './typing-indicator';
+import { SectionIndicator } from './section-indicator';
+import { flowManager } from '../../lib/questionnaire/flow-manager';
 
 export interface QuestionCardProps {
   question: Question;
   onSubmit: (answer: any, nextQuestionId: string | null) => void;
   currentProgress: QuestionnaireProgress;
+  onModifyPrevious: () => void;
 }
 
 const createAnswerSchema = (question: Question) => {
@@ -52,27 +58,68 @@ const createAnswerSchema = (question: Question) => {
   return z.object({ answer: baseSchema });
 };
 
-export default function QuestionCard({ question, onSubmit, currentProgress }: QuestionCardProps) {
+export default function QuestionCard({ question, onSubmit, currentProgress, onModifyPrevious }: QuestionCardProps) {
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<any>(() => {
     return currentProgress.answers[question.id] || '';
   });
-  const [progress, setProgress] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isModifying, setIsModifying] = useState(false);
+  const [showModifyTooltip, setShowModifyTooltip] = useState(false);
+  const [autoSaveIndicator, setAutoSaveIndicator] = useState<string | null>(null);
+  const [lastCheckpoint, setLastCheckpoint] = useState<string | null>(null);
+
+  // Calculate section information
+  const currentSectionIndex = questions.findIndex(q => q.section === question.section);
+  const uniqueSections = [...new Set(questions.map(q => q.section))];
+  const totalSections = uniqueSections.length;
+
+  // Auto-save functionality using FlowManager
+  const autoSave = useCallback(() => {
+    try {
+      const updatedProgress = {
+        ...currentProgress,
+        answers: {
+          ...currentProgress.answers,
+          [question.id]: answer
+        }
+      };
+
+      flowManager.autoSave(updatedProgress);
+      setAutoSaveIndicator('Progress auto-saved');
+      setTimeout(() => setAutoSaveIndicator(null), 2000);
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      setAutoSaveIndicator('Auto-save failed');
+    }
+  }, [currentProgress, question.id, answer]);
 
   useEffect(() => {
-    setProgress(calculateProgress(currentProgress.answers));
-    
+    const autoSaveTimer = setInterval(autoSave, flowManager.getAutoSaveInterval());
+    return () => clearInterval(autoSaveTimer);
+  }, [autoSave]);
+
+  useEffect(() => {
     // Load saved answer for current question
     const savedAnswer = currentProgress.answers[question.id];
     if (savedAnswer) {
       setAnswer(savedAnswer);
+      setIsModifying(true);
+    } else {
+      setAnswer(''); // Reset answer when moving to a new question
+      setIsModifying(false);
     }
-  }, [question.id, currentProgress]);
 
-  // Save progress to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('questionnaireProgress', JSON.stringify(currentProgress));
-  }, [currentProgress]);
+    // Enhanced typing indicator
+    setIsTyping(true);
+    const timer = setTimeout(() => setIsTyping(false), 800);
+
+    // Load last checkpoint
+    const checkpoint = flowManager.getLastCheckpoint();
+    setLastCheckpoint(checkpoint?.questionId || null);
+
+    return () => clearTimeout(timer);
+  }, [question.id, currentProgress]);
 
   const validateAnswer = (answer: any) => {
     const schema = createAnswerSchema(question);
@@ -86,32 +133,82 @@ export default function QuestionCard({ question, onSubmit, currentProgress }: Qu
     return result.data.answer;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
       const validatedAnswer = validateAnswer(answer);
-      const nextQuestionId = getNextQuestionId(question, validatedAnswer);
+      
+      // Use FlowManager to determine next question
+      const nextQuestionId = flowManager.getNextQuestion(question.id, {
+        ...currentProgress.answers,
+        [question.id]: validatedAnswer
+      });
+
+      // Save progress before submitting
+      await autoSave();
+      
+      // Create checkpoint if needed
+      if (question.checkpoint) {
+        flowManager.createCheckpoint({
+          ...currentProgress,
+          currentQuestionId: question.id,
+          answers: {
+            ...currentProgress.answers,
+            [question.id]: validatedAnswer
+          }
+        });
+      }
+      
       onSubmit(validatedAnswer, nextQuestionId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid answer');
     }
   };
 
+  const handleRestoreCheckpoint = () => {
+    if (lastCheckpoint) {
+      const restoredProgress = flowManager.restoreCheckpoint(lastCheckpoint);
+      if (restoredProgress) {
+        // Update the form with restored data
+        setAnswer(restoredProgress.answers[question.id] || '');
+        setIsModifying(true);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
-        <div
-          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        ></div>
-      </div>
+      {/* Section Indicator */}
+      <SectionIndicator
+        currentSection={question.section}
+        totalSections={totalSections}
+        currentSectionIndex={currentSectionIndex}
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-white rounded-xl shadow-lg max-w-2xl mx-auto">
+      {/* Auto-save Indicator */}
+      {autoSaveIndicator && (
+        <div className="fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-md shadow-lg transition-opacity duration-300">
+          {autoSaveIndicator}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className={`space-y-6 p-8 bg-white rounded-xl shadow-lg max-w-2xl mx-auto ${isModifying ? 'border-2 border-blue-200' : ''}`}>
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-900">{question.text}</h3>
+          {/* Typing Indicator */}
+          <TypingIndicator isVisible={isTyping} />
+
+          {!isTyping && (
+            <>
+              <h3 className="text-xl font-semibold text-gray-900">{question.text}</h3>
+              {isModifying && (
+                <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded-md">
+                  Modifying previous answer
+                </div>
+              )}
+            </>
+          )}
 
           {error && (
             <Alert variant="destructive">
@@ -119,6 +216,28 @@ export default function QuestionCard({ question, onSubmit, currentProgress }: Qu
             </Alert>
           )}
 
+          {/* Checkpoint Indicator */}
+          {question.checkpoint && (
+            <div className="flex items-center justify-between text-sm bg-green-50 p-3 rounded-md">
+              <div className="flex items-center space-x-2 text-green-600">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Checkpoint question - progress will be saved</span>
+              </div>
+              {lastCheckpoint && (
+                <button
+                  type="button"
+                  onClick={handleRestoreCheckpoint}
+                  className="text-blue-600 hover:text-blue-700 focus:outline-none"
+                >
+                  Restore Last Checkpoint
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Question Input Section */}
           <div className="mt-4">
             {question.type === 'text' && (
               <textarea
@@ -238,15 +357,39 @@ export default function QuestionCard({ question, onSubmit, currentProgress }: Qu
           </div>
         </div>
 
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            Question {Object.keys(currentProgress.answers).length + 1} of {6}
+        {/* Navigation and Progress Section */}
+        <div className="flex justify-between items-center pt-6 border-t border-gray-100">
+          <div className="flex items-center space-x-4">
+            <div 
+              className="relative"
+              onMouseEnter={() => setShowModifyTooltip(true)}
+              onMouseLeave={() => setShowModifyTooltip(false)}
+            >
+              <button
+                type="button"
+                onClick={onModifyPrevious}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 focus:outline-none"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Modify Previous</span>
+              </button>
+              {showModifyTooltip && (
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-nowrap">
+                  Click to modify previous answers
+                </div>
+              )}
+            </div>
+            <div className="text-sm text-gray-500">
+              Question {Object.keys(currentProgress.answers).length + 1} of {questions.filter(q => !q.skipIf || !q.skipIf(currentProgress.answers)).length}
+            </div>
           </div>
           <button
             type="submit"
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
-            Next Question
+            {isModifying ? 'Update Answer' : 'Next Question'}
           </button>
         </div>
       </form>

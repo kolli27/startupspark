@@ -2,14 +2,20 @@
 ├── README.md
 ├── codebase.md
 ├── docs
+│   ├── api-documentation.md
 │   ├── codebaseSummary.md
 │   ├── critical-path-tests.md
 │   ├── currentTask.md
+│   ├── deployment-guide.md
 │   ├── implementationGuide.md
 │   ├── projectRoadmap.md
 │   ├── quickStart.md
+│   ├── stripe-setup-guide.md
+│   ├── supabase-schema-updated.sql
 │   ├── supabase-schema.sql
-│   └── techStack.md
+│   ├── techStack.md
+│   ├── usage-tracking.sql
+│   └── user-manual.md
 ├── jest.config.js
 ├── jest.setup.js
 ├── next-env.d.ts
@@ -23,6 +29,7 @@
 │   ├── next.svg
 │   ├── vercel.svg
 │   └── window.svg
+├── setup-database.sql
 ├── src
 │   ├── __tests__
 │   │   ├── api
@@ -36,6 +43,8 @@
 │   ├── app
 │   │   ├── (auth)
 │   │   │   ├── login
+│   │   │   │   └── page.tsx
+│   │   │   ├── password-reset
 │   │   │   │   └── page.tsx
 │   │   │   └── signup
 │   │   │       └── page.tsx
@@ -94,7 +103,10 @@
 │   │   ├── auth
 │   │   │   └── AuthProviderWrapper.tsx
 │   │   ├── dashboard
-│   │   │   └── SavedRecommendations.tsx
+│   │   │   ├── SavedRecommendations.tsx
+│   │   │   ├── export-features.tsx
+│   │   │   ├── profile-settings.tsx
+│   │   │   └── usage-statistics.tsx
 │   │   ├── debug
 │   │   │   └── DebugPanel.tsx
 │   │   ├── error
@@ -137,6 +149,8 @@
 │   │   │   └── config.ts
 │   │   ├── types
 │   │   │   └── questionnaire.ts
+│   │   ├── usage
+│   │   │   └── service.ts
 │   │   └── utils
 │   │       ├── api-error.ts
 │   │       ├── cache.ts
@@ -151,4 +165,4 @@
 ├── tailwind.config.ts
 └── tsconfig.json
 
-59 directories, 92 files
+61 directories, 104 files

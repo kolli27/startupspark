@@ -29,21 +29,23 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#6366F1",
-          foreground: "#FFFFFF",
-          100: "#E0E7FF",
-          500: "#6366F1",
-          600: "#4F46E5"
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          100: "hsl(215 25% 90%)",
+          500: "hsl(215 25% 27%)",
+          600: "hsl(215 25% 20%)"
         },
         accent: {
-          DEFAULT: "#EC4899",
-          foreground: "#FFFFFF",
-          100: "#FCE7F3",
-          500: "#EC4899"
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+          100: "hsl(200 13% 90%)",
+          500: "hsl(200 13% 45%)"
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          100: "hsl(217 19% 90%)",
+          500: "hsl(217 19% 27%)"
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",

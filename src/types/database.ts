@@ -175,6 +175,108 @@ export interface Database {
           updated_at?: string;
         };
       };
+      analytics_events: {
+        Row: {
+          id: string;
+          timestamp: string;
+          event: string;
+          properties: Json;
+          user_id: string | null;
+          session_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          timestamp: string;
+          event: string;
+          properties: Json;
+          user_id?: string | null;
+          session_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          timestamp?: string;
+          event?: string;
+          properties?: Json;
+          user_id?: string | null;
+          session_id?: string | null;
+          created_at?: string;
+        };
+      };
+      request_metrics: {
+        Row: {
+          id: string;
+          path: string;
+          method: string;
+          duration: number;
+          timestamp: string;
+          status_code: number | null;
+          user_agent: string | null;
+          ip: string | null;
+          country: string | null;
+          authenticated: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          path: string;
+          method: string;
+          duration: number;
+          timestamp: string;
+          status_code?: number | null;
+          user_agent?: string | null;
+          ip?: string | null;
+          country?: string | null;
+          authenticated?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          path?: string;
+          method?: string;
+          duration?: number;
+          timestamp?: string;
+          status_code?: number | null;
+          user_agent?: string | null;
+          ip?: string | null;
+          country?: string | null;
+          authenticated?: boolean;
+          created_at?: string;
+        };
+      };
+      error_logs: {
+        Row: {
+          id: string;
+          severity: 'info' | 'warning' | 'error' | 'critical';
+          error_name: string;
+          error_message: string;
+          error_stack: string | null;
+          context: Json;
+          timestamp: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          severity: 'info' | 'warning' | 'error' | 'critical';
+          error_name: string;
+          error_message: string;
+          error_stack?: string | null;
+          context: Json;
+          timestamp: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          severity?: 'info' | 'warning' | 'error' | 'critical';
+          error_name?: string;
+          error_message?: string;
+          error_stack?: string | null;
+          context?: Json;
+          timestamp?: string;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

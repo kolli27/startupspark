@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_APP_URL": "@next_public_app_url",
+    "DATABASE_URL": "@database_url",
+    "NEXTAUTH_URL": "@nextauth_url",
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next_public_stripe_publishable_key",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "STRIPE_BASIC_PRICE_ID": "@stripe_basic_price_id",
+    "STRIPE_PRO_PRICE_ID": "@stripe_pro_price_id",
+    "STRIPE_ENTERPRISE_PRICE_ID": "@stripe_enterprise_price_id",
+    "OPENAI_API_KEY": "@openai_api_key",
+    "OPENAI_ORG_ID": "@openai_org_id",
+    "REDIS_URL": "@redis_url",
+    "SENTRY_DSN": "@sentry_dsn",
+    "LOGFLARE_API_KEY": "@logflare_api_key",
+    "LOGFLARE_SOURCE_ID": "@logflare_source_id"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_APP_URL": "@next_public_app_url",
+      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next_public_stripe_publishable_key",
+      "NEXT_PUBLIC_ENABLE_ANALYTICS": "true",
+      "NEXT_PUBLIC_ENABLE_MONITORING": "true"
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/stripe/webhook",
+      "destination": "/api/stripe/webhook"
+    }
+  ],
+  "functions": {
+    "api/stripe/webhook": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "api/ai/generate": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}

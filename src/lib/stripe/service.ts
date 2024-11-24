@@ -1,125 +1,113 @@
-import Stripe from 'stripe'
-import { stripe } from './config'
+import { stripe } from './config';
+import {
+  SUBSCRIPTION_TIERS,
+  SubscriptionTier,
+  SubscriptionStatus
+} from './config';
 
-interface CheckoutSession {
-  url: string
-}
-
-interface PortalSession {
-  url: string
-}
-
-interface SubscriptionStatus {
-  id: string
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete'
-  current_period_end: string
-  cancel_at_period_end?: boolean
+interface SubscriptionDetails {
+  id: string;
+  tier: SubscriptionTier;
+  status: SubscriptionStatus;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  usage?: {
+    ideaGenerations: number;
+    savedIdeas: number;
+    aiQueries: number;
+  };
 }
 
 export const stripeService = {
-  async createCheckoutSession(userId: string): Promise<CheckoutSession> {
-    try {
-      const session = await stripe.checkout.sessions.create({
-        customer_email: userId,
-        line_items: [
-          {
-            price: process.env.STRIPE_PRICE_ID,
-            quantity: 1,
-          },
-        ],
-        mode: 'subscription',
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel`,
-        metadata: {
-          userId,
-        },
-      })
+  getPriceIdForTier(tier: SubscriptionTier): string {
+    const priceIds = {
+      [SUBSCRIPTION_TIERS.basic]: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
+      [SUBSCRIPTION_TIERS.pro]: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+      [SUBSCRIPTION_TIERS.enterprise]: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID
+    };
 
-      if (!session.url) {
-        throw new Error('Failed to create checkout session')
-      }
-
-      return { url: session.url }
-    } catch (error) {
-      console.error('Error creating checkout session:', error)
-      throw new Error('Failed to create checkout session')
+    const priceId = priceIds[tier];
+    if (!priceId) {
+      throw new Error(`No price ID configured for tier: ${tier}`);
     }
+
+    return priceId;
   },
 
-  async createPortalSession(customerId: string): Promise<PortalSession> {
-    try {
-      const session = await stripe.billingPortal.sessions.create({
-        customer: customerId,
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-      })
+  async createCheckoutSession(
+    userId: string,
+    tier: SubscriptionTier = SUBSCRIPTION_TIERS.basic,
+    customFields?: Record<string, any>
+  ) {
+    const priceId = this.getPriceIdForTier(tier);
 
-      return { url: session.url }
-    } catch (error) {
-      console.error('Error creating portal session:', error)
-      throw new Error('Failed to create portal session')
-    }
+    const session = await stripe.checkout.sessions.create({
+      customer: userId,
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel`,
+      metadata: customFields
+    });
+
+    return session;
   },
 
-  async getActiveSubscription(customerId: string): Promise<SubscriptionStatus | null> {
-    try {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        limit: 1,
-      })
-
-      if (!subscriptions.data.length) {
-        return null
-      }
-
-      const subscription = subscriptions.data[0]
-      return {
-        id: subscription.id,
-        status: subscription.status as SubscriptionStatus['status'],
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancel_at_period_end: subscription.cancel_at_period_end,
-      }
-    } catch (error) {
-      console.error('Error fetching subscription:', error)
-      throw new Error('Failed to fetch subscription')
-    }
+  async createPortalSession(userId: string) {
+    return stripe.billingPortal.sessions.create({
+      customer: userId,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+    });
   },
 
-  async constructWebhookEvent(
-    payload: string | Buffer,
-    signature: string,
-    webhookSecret: string
-  ): Promise<Stripe.Event> {
-    try {
-      return stripe.webhooks.constructEvent(
-        payload,
-        signature,
-        webhookSecret
-      )
-    } catch (error) {
-      console.error('Error constructing webhook event:', error)
-      throw new Error('Failed to construct webhook event')
-    }
+  async getSubscriptionDetails(userId: string): Promise<SubscriptionDetails | null> {
+    const subscriptions = await stripe.subscriptions.list({
+      customer: userId,
+      status: 'active',
+      expand: ['data.default_payment_method']
+    });
+
+    if (!subscriptions.data.length) return null;
+
+    const subscription = subscriptions.data[0];
+    const priceId = subscription.items.data[0].price.id;
+    const tier = Object.entries(SUBSCRIPTION_TIERS).find(
+      ([_, id]) => this.getPriceIdForTier(id as SubscriptionTier) === priceId
+    )?.[1] as SubscriptionTier;
+
+    // Get usage metrics from our database
+    const usage = await this.getSubscriptionUsage(userId);
+
+    return {
+      id: subscription.id,
+      tier: tier || SUBSCRIPTION_TIERS.basic,
+      status: subscription.status as SubscriptionStatus,
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      usage
+    };
   },
 
-  async handleSubscriptionChange(
-    subscriptionId: string,
-    customerId: string,
-    status: SubscriptionStatus['status']
-  ): Promise<void> {
-    try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-      
-      if (subscription.customer !== customerId) {
-        throw new Error('Subscription does not belong to customer')
-      }
+  async getSubscriptionUsage(userId: string) {
+    // Implement fetching usage metrics from your database
+    // This is a placeholder implementation
+    return {
+      ideaGenerations: 0,
+      savedIdeas: 0,
+      aiQueries: 0
+    };
+  },
 
-      // Update subscription status in your database
-      // This would typically be handled by your webhook handler
-      console.log(`Subscription ${subscriptionId} status updated to ${status}`)
-    } catch (error) {
-      console.error('Error handling subscription change:', error)
-      throw new Error('Failed to handle subscription change')
-    }
+  async cancelSubscription(subscriptionId: string) {
+    return stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true
+    });
+  },
+
+  async reactivateSubscription(subscriptionId: string) {
+    return stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: false
+    });
   }
-}
+};

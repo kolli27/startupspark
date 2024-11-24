@@ -30,3 +30,11 @@ export function Alert({
     </div>
   )
 }
+
+export function AlertDescription({ children, className, ...props }: { children: ReactNode, className?: string }) {
+  return (
+    <div className={cn("text-sm", className)} {...props}>
+      {children}
+    </div>
+  )
+}

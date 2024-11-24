@@ -1,93 +1,98 @@
-"use client"
+import { Metadata } from 'next'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { stripeService } from '@/lib/stripe/service'
 
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { useSubscription } from '@/lib/hooks/useSubscription'
+export const metadata: Metadata = {
+  title: 'Payment Successful - StartupSpark',
+  description: 'Your payment has been processed successfully'
+}
 
-export default function PaymentSuccessPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { refreshSubscription } = useSubscription()
-  const [loading, setLoading] = useState(true)
+async function SuccessPage({
+  searchParams
+}: {
+  searchParams: { session_id?: string }
+}) {
+  const supabase = createServerComponentClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
 
-  useEffect(() => {
-    const sessionId = searchParams.get('session_id')
-    if (!sessionId) {
-      router.push('/dashboard')
-      return
-    }
-
-    const verifyPayment = async () => {
-      try {
-        // Refresh subscription data
-        await refreshSubscription()
-        setLoading(false)
-      } catch (error) {
-        console.error('Error verifying payment:', error)
-        router.push('/dashboard')
-      }
-    }
-
-    verifyPayment()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Confirming your payment...</p>
-        </div>
-      </div>
-    )
+  if (!session) {
+    redirect('/login')
   }
 
+  // If no session_id is provided, redirect to dashboard
+  if (!searchParams.session_id) {
+    redirect('/dashboard')
+  }
+
+  // Get subscription details from Stripe
+  const subscriptionDetails = await stripeService.getSubscriptionDetails(session.user.id)
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto p-8">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-green-500"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <svg
+            className="h-16 w-16 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 48 48"
+          >
+            <circle
+              className="opacity-25"
+              cx="24"
+              cy="24"
+              r="20"
               stroke="currentColor"
-            >
-              <path d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M14 24l8 8 16-16"
+            />
+          </svg>
+        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Payment Successful!
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Thank you for your subscription. Your account has been upgraded to{' '}
+          <span className="font-semibold">
+            {subscriptionDetails?.tier || 'premium'} tier
+          </span>
+          .
+        </p>
+      </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Payment Successful!
-          </h1>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">
+                What's next?
+              </h3>
+              <ul className="mt-4 list-disc list-inside text-sm text-gray-600 space-y-2">
+                <li>Your subscription is now active</li>
+                <li>You have access to all {subscriptionDetails?.tier || 'premium'} features</li>
+                <li>You can start using the enhanced capabilities right away</li>
+              </ul>
+            </div>
 
-          <p className="text-gray-600 mb-8">
-            Thank you for upgrading to Premium! You now have access to all premium features
-            and can generate up to 10 business ideas per month.
-          </p>
-
-          <div className="space-y-4">
-            <Button
-              onClick={() => router.push('/questionnaire')}
-              className="w-full bg-primary-600 hover:bg-primary-700"
-            >
-              Generate New Ideas
-            </Button>
-
-            <Button
-              onClick={() => router.push('/dashboard')}
-              variant="outline"
-              className="w-full"
-            >
-              Go to Dashboard
-            </Button>
+            <div className="flex justify-center">
+              <a
+                href="/dashboard"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Go to Dashboard
+              </a>
+            </div>
           </div>
         </div>
       </div>
     </div>
   )
 }
+
+export default SuccessPage

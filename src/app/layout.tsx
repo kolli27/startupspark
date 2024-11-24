@@ -1,7 +1,8 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { measureWebVitals, reportPerformanceMetric } from '@/lib/monitoring';
+import { measureWebVitals } from '@/lib/monitoring';
 import DebugPanel from '@/components/debug/DebugPanel';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -15,18 +16,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Initialize performance monitoring
-  if (typeof window !== 'undefined') {
-    measureWebVitals((metric) => {
-      reportPerformanceMetric(metric);
-    });
-  }
-
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <DebugPanel />
+        <AuthProvider>
+          {children}
+          <DebugPanel />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,131 +1,71 @@
-import React, { useState, useEffect } from 'react'
-import { SubscriptionData, PaymentPlan, isFeatureAvailable } from '@/lib/stripe/config'
+import { useState, useEffect } from 'react';
+import { stripeService } from '@/lib/stripe/service';
+import { SubscriptionTier, SUBSCRIPTION_TIERS } from '@/lib/stripe/config';
 
-interface UseSubscriptionReturn {
-  subscription: SubscriptionData | null
-  loading: boolean
-  error: string | null
-  isFeatureEnabled: (feature: string) => boolean
-  canGenerateIdea: boolean
-  refreshSubscription: () => Promise<void>
+export interface SubscriptionDetails {
+  id: string;
+  tier: SubscriptionTier;
+  status: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  usage?: {
+    ideaGenerations: number;
+    savedIdeas: number;
+    aiQueries: number;
+  };
 }
 
-export function useSubscription(): UseSubscriptionReturn {
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export interface UseSubscriptionReturn {
+  subscription: SubscriptionDetails | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useSubscription(userId?: string): UseSubscriptionReturn {
+  const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = async () => {
-    try {
-      const response = await fetch('/api/stripe/subscription')
-      if (!response.ok) throw new Error('Failed to fetch subscription')
-      const data = await response.json()
-      setSubscription(data)
-      setError(null)
-    } catch (err) {
-      setError('Failed to load subscription status')
-      console.error(err)
-    } finally {
-      setLoading(false)
+    if (!userId) {
+      setSubscription(null);
+      setIsLoading(false);
+      return;
     }
-  }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const details = await stripeService.getSubscriptionDetails(userId);
+      if (details) {
+        setSubscription({
+          id: details.id,
+          tier: details.tier,
+          status: details.status,
+          current_period_end: details.current_period_end,
+          cancel_at_period_end: details.cancel_at_period_end || false,
+          usage: details.usage
+        });
+      } else {
+        setSubscription(null);
+      }
+    } catch (err) {
+      setError('Failed to load subscription details');
+      console.error('Error fetching subscription:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchSubscription()
-  }, [])
-
-  const isFeatureEnabled = (feature: string): boolean => {
-    if (!subscription) return false
-    return isFeatureAvailable(feature as any, subscription.plan)
-  }
-
-  const canGenerateIdea = (): boolean => {
-    if (!subscription) return false
-    return subscription.ideasRemaining > 0
-  }
+    fetchSubscription();
+  }, [userId]);
 
   return {
     subscription,
-    loading,
+    isLoading,
     error,
-    isFeatureEnabled,
-    canGenerateIdea: canGenerateIdea(),
-    refreshSubscription: fetchSubscription
-  }
-}
-
-// Higher-order component to protect premium features
-export function withPremiumFeature<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  featureName: string
-): React.FC<P> {
-  const WithPremiumFeatureComponent: React.FC<P> = (props) => {
-    const { isFeatureEnabled, loading } = useSubscription()
-
-    if (loading) {
-      return React.createElement('div', { className: 'animate-pulse' },
-        React.createElement('div', { className: 'h-8 bg-gray-200 rounded w-3/4 mb-4' }),
-        React.createElement('div', { className: 'h-8 bg-gray-200 rounded w-1/2' })
-      )
-    }
-
-    if (!isFeatureEnabled(featureName)) {
-      return React.createElement('div', { className: 'p-4 bg-gray-50 rounded-lg' },
-        React.createElement('h3', { className: 'font-semibold text-lg mb-2' }, 'Premium Feature'),
-        React.createElement('p', { className: 'text-gray-600 mb-4' }, 
-          'This feature is only available to premium subscribers.'
-        ),
-        React.createElement('button', {
-          onClick: () => window.location.href = '/pricing',
-          className: 'bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700'
-        }, 'Upgrade to Premium')
-      )
-    }
-
-    return React.createElement(WrappedComponent, props)
-  }
-
-  WithPremiumFeatureComponent.displayName = `WithPremiumFeature(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`
-
-  return WithPremiumFeatureComponent
-}
-
-interface UseIdeaGenerationReturn {
-  canGenerateIdea: boolean
-  generateIdea: <T>(generationFunction: () => Promise<T>) => Promise<T>
-  subscription: SubscriptionData | null
-  ideasRemaining: number
-}
-
-// Hook to manage idea generation limits
-export function useIdeaGeneration(): UseIdeaGenerationReturn {
-  const { subscription, canGenerateIdea, refreshSubscription } = useSubscription()
-
-  const generateIdea = async <T,>(generationFunction: () => Promise<T>): Promise<T> => {
-    if (!canGenerateIdea) {
-      throw new Error('Idea generation limit reached')
-    }
-
-    try {
-      const result = await generationFunction()
-      
-      // Increment usage and refresh subscription data
-      await fetch('/api/stripe/subscription', {
-        method: 'PUT'
-      })
-      await refreshSubscription()
-
-      return result
-    } catch (error) {
-      console.error('Failed to generate idea:', error)
-      throw error
-    }
-  }
-
-  return {
-    canGenerateIdea,
-    generateIdea,
-    subscription,
-    ideasRemaining: subscription?.ideasRemaining || 0
-  }
+    refetch: fetchSubscription
+  };
 }
